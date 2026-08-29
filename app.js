@@ -187,7 +187,10 @@ async function loadFilesFromInput(files) {
     let questionsContent = '';
     
     for (const file of files) {
-        const content = await file.text();
+        const rawContent = await file.text();
+        // Normalize CRLF/CR to LF so line-anchored regexes ($ / ^) match reliably
+        // regardless of the source file's line-ending style (Windows-authored .md files use CRLF).
+        const content = rawContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         if (file.name === 'metadata.json') {
             metadata = JSON.parse(content);
         } else if (file.name.includes('FLASHCARDS')) {
@@ -207,6 +210,15 @@ async function loadFilesFromInput(files) {
     
     const flashcards = parseFlashcardsMarkdown(flashcardsContent);
     const questions = parseQuestionsMarkdown(questionsContent);
+    
+    // Fail loudly instead of silently storing an empty, unusable exam.
+    // (A parse regression here previously caused "Start" to hang forever with no error.)
+    if (flashcards.length === 0 || questions.length === 0) {
+        throw new Error(
+            `Parsing failed: found ${flashcards.length} flashcards and ${questions.length} questions. ` +
+            `Check that the .md files match the expected format.`
+        );
+    }
     
     // Store in DB
     const examId = `exam_${metadata.examCode}`;
@@ -252,7 +264,7 @@ async function loadFilesFromInput(files) {
     });
     
     currentExam = exam;
-    return exam;
+    return { exam, flashcardCount: flashcards.length, questionCount: questions.length };
 }
 
 // ============================================================================
@@ -328,14 +340,14 @@ document.getElementById('loadFileBtn').addEventListener('click', () => {
 
 document.getElementById('fileInput').addEventListener('change', async (e) => {
     try {
-        const exam = await loadFilesFromInput(e.target.files);
+        const { exam, flashcardCount, questionCount } = await loadFilesFromInput(e.target.files);
         
-        // Show status
+        // Show status (actual parsed counts, not the static metadata.json numbers)
         const info = document.getElementById('contentInfo');
         info.innerHTML = `
             <strong>${exam.title}</strong><br>
-            Flashcards: ${exam.metadata.totalFlashcards}<br>
-            Questions: ${exam.metadata.totalQuestions}
+            Flashcards: ${flashcardCount}<br>
+            Questions: ${questionCount}
         `;
         
         document.getElementById('fileStatus').style.display = 'block';
@@ -387,11 +399,16 @@ document.getElementById('startFlashcardBtn').addEventListener('click', async () 
         request.onsuccess = () => resolve(request.result);
     });
     
+    if (allCards.length === 0) {
+        alert('No flashcards are loaded. Please use "Load Exam Files" first.');
+        return;
+    }
+    
     const cardIds = allCards.map(c => c.id);
     const selectedIds = await selectRandomItems(currentExam.id, 'flashcard', count, cardIds);
     
-    // Load selected cards
-    const selectedCards = await new Promise((resolve, reject) => {
+    // Load selected cards (guard against an empty selection hanging this promise forever)
+    const selectedCards = selectedIds.length === 0 ? [] : await new Promise((resolve, reject) => {
         const tx = db.transaction([STORE_NAMES.flashcards]);
         const store = tx.objectStore(STORE_NAMES.flashcards);
         const results = [];
@@ -400,6 +417,7 @@ document.getElementById('startFlashcardBtn').addEventListener('click', async () 
         
         selectedIds.forEach(id => {
             const req = store.get(id);
+            req.onerror = () => reject(req.error);
             req.onsuccess = () => {
                 results.push(req.result);
                 completed++;
@@ -485,11 +503,16 @@ document.getElementById('startQuizBtn').addEventListener('click', async () => {
         request.onsuccess = () => resolve(request.result);
     });
     
+    if (allQuestions.length === 0) {
+        alert('No questions are loaded. Please use "Load Exam Files" first.');
+        return;
+    }
+    
     const questionIds = allQuestions.map(q => q.id);
     const selectedIds = await selectRandomItems(currentExam.id, 'quiz', count, questionIds);
     
-    // Load selected questions
-    const selectedQuestions = await new Promise((resolve, reject) => {
+    // Load selected questions (guard against an empty selection hanging this promise forever)
+    const selectedQuestions = selectedIds.length === 0 ? [] : await new Promise((resolve, reject) => {
         const tx = db.transaction([STORE_NAMES.questions]);
         const store = tx.objectStore(STORE_NAMES.questions);
         const results = [];
@@ -498,6 +521,7 @@ document.getElementById('startQuizBtn').addEventListener('click', async () => {
         
         selectedIds.forEach(id => {
             const req = store.get(id);
+            req.onerror = () => reject(req.error);
             req.onsuccess = () => {
                 results.push(req.result);
                 completed++;
