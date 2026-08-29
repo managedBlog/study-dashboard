@@ -165,6 +165,15 @@ function parseQuestionsMarkdown(content) {
             continue;
         }
         
+        // Follow-up question line, entirely bold (e.g. "**Why will this not work?**").
+        // Appears after the scenario blockquote and before the options list - without this,
+        // the scenario setup shows with no actual question attached to it.
+        if (!inOptions && line.match(/^\*\*(.+)\*\*$/)) {
+            const boldMatch = line.match(/^\*\*(.+)\*\*$/);
+            current.text += (current.text ? ' ' : '') + boldMatch[1].trim();
+            continue;
+        }
+        
         // Explanation
         if (line.trim() && !line.startsWith('#') && !line.startsWith('*') && 
             !line.startsWith('-') && !line.startsWith('>') && inOptions && current.answer) {
@@ -450,17 +459,33 @@ function showFlashcard() {
     document.getElementById('flashcardProgress').textContent = `${currentSession.current + 1} / ${total}`;
     document.getElementById('flashcardProgressFill').style.width = `${((currentSession.current + 1) / total) * 100}%`;
     
-    document.getElementById('cardQuestion').textContent = card.q;
-    document.getElementById('cardAnswer').textContent = card.a;
+    document.getElementById('cardText').textContent = card.q;
     
-    document.getElementById('cardInner').classList.remove('flipped');
+    const face = document.getElementById('cardFace');
+    face.classList.remove('flipping', 'answer-side');
+    
     document.getElementById('revealControls').style.display = 'flex';
     document.getElementById('nextControls').style.display = 'none';
     document.getElementById('flashcardSummary').style.display = 'none';
 }
 
 document.getElementById('revealBtn').addEventListener('click', () => {
-    document.getElementById('cardInner').classList.add('flipped');
+    const card = currentSession.cards[currentSession.current];
+    const face = document.getElementById('cardFace');
+    const textEl = document.getElementById('cardText');
+    
+    // Rotate to 90deg (edge-on, so the card visually "disappears"), swap the text
+    // while it's edge-on, then rotate back to 0deg showing the new content. This
+    // avoids relying on backface-visibility, which some browsers render unreliably
+    // (e.g. it can silently stop hiding the back face when combined with overflow).
+    face.classList.add('flipping');
+    
+    setTimeout(() => {
+        textEl.textContent = card.a;
+        face.classList.add('answer-side');
+        face.classList.remove('flipping');
+    }, 250);
+    
     document.getElementById('revealControls').style.display = 'none';
     document.getElementById('nextControls').style.display = 'flex';
 });
