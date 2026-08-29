@@ -16,6 +16,47 @@ let currentExam = null;
 let currentSession = null;
 
 // ============================================================================
+// TEXT RENDERING HELPERS
+// ============================================================================
+
+function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Converts markdown-style [label](url) links and bare http(s) URLs in plain text into
+// clickable <a> tags, so rationale/explanation text with reference links (e.g. Microsoft
+// Learn pages) can be opened directly. Escapes HTML first for safety, then swaps links in
+// via placeholder tokens so the bare-URL pass never re-matches text already inside an
+// <a> tag produced by the markdown-link pass.
+function linkifyText(text) {
+    let escaped = escapeHtml(text);
+    const placeholders = [];
+    
+    // Markdown-style [label](url) links
+    escaped = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
+        const token = `@@LINK${placeholders.length}@@`;
+        placeholders.push(`<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+        return token;
+    });
+    
+    // Bare URLs (trim trailing punctuation like a period or closing paren that's likely
+    // sentence punctuation rather than part of the URL)
+    escaped = escaped.replace(/https?:\/\/[^\s<)]+/g, (match) => {
+        const trimmedUrl = match.replace(/[.,;:)]+$/, '');
+        const trailing = match.slice(trimmedUrl.length);
+        const token = `@@LINK${placeholders.length}@@`;
+        placeholders.push(`<a href="${trimmedUrl}" target="_blank" rel="noopener noreferrer">${trimmedUrl}</a>${trailing}`);
+        return token;
+    });
+    
+    placeholders.forEach((html, i) => {
+        escaped = escaped.replace(`@@LINK${i}@@`, html);
+    });
+    
+    return escaped;
+}
+
+// ============================================================================
 // DATABASE INITIALIZATION
 // ============================================================================
 
@@ -866,7 +907,7 @@ document.getElementById('submitAnswerBtn').addEventListener('click', () => {
         
         const feedbackExplanation = document.getElementById('feedbackExplanation');
         if (q.explanation) {
-            feedbackExplanation.textContent = q.explanation;
+            feedbackExplanation.innerHTML = linkifyText(q.explanation);
             feedbackExplanation.style.display = 'block';
         } else {
             feedbackExplanation.style.display = 'none';

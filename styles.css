@@ -365,6 +365,15 @@ input[type="number"]:focus {
     line-height: 1.7;
 }
 
+.feedback-explanation a {
+    color: #4c5fd5;
+    text-decoration: underline;
+}
+
+.feedback-explanation a:hover {
+    color: #667eea;
+}
+
 .quiz-summary {
     background: #f0f0f0;
     padding: 40px 30px;
