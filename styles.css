@@ -247,6 +247,31 @@ input[type="number"]:focus {
     margin: -20px 0 20px;
 }
 
+.flashcard-link-panel {
+    background: #f8f9ff;
+    border-left: 4px solid #667eea;
+    padding: 16px;
+    margin: 0 0 20px;
+    border-radius: 6px;
+    color: #333;
+    line-height: 1.6;
+}
+
+.flashcard-link-panel strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #667eea;
+}
+
+.flashcard-link-panel a {
+    color: #4c5fd5;
+    text-decoration: underline;
+}
+
+.flashcard-link-panel a:hover {
+    color: #667eea;
+}
+
 .controls {
     display: flex;
     gap: 10px;

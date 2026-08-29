@@ -52,8 +52,37 @@ function linkifyText(text) {
     placeholders.forEach((html, i) => {
         escaped = escaped.replace(`@@LINK${i}@@`, html);
     });
-    
+
     return escaped;
+}
+
+function hasLinks(text) {
+    return /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|https?:\/\/\S+/.test(text);
+}
+
+function displayTextWithoutLinkUrls(text) {
+    return (text || '')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
+        .replace(/https?:\/\/\S+/g, 'link below');
+}
+
+function renderFlashcardLinks(card) {
+    const linksPanel = document.getElementById('flashcardLinks');
+    if (!linksPanel) return;
+
+    const answer = card?.a || '';
+
+    if (!currentSession.showingAnswer || !hasLinks(answer)) {
+        linksPanel.innerHTML = '';
+        linksPanel.style.display = 'none';
+        return;
+    }
+
+    linksPanel.innerHTML = `
+        <strong>Answer links / rationale</strong>
+        <p>${linkifyText(answer)}</p>
+    `;
+    linksPanel.style.display = 'block';
 }
 
 // ============================================================================
@@ -723,10 +752,11 @@ function showFlashcard() {
     
     document.getElementById('flashcardProgress').textContent = `${currentSession.current + 1} / ${total}`;
     document.getElementById('flashcardProgressFill').style.width = `${((currentSession.current + 1) / total) * 100}%`;
-    
+
     currentSession.showingAnswer = false;
-    document.getElementById('cardText').textContent = card.q;
-    
+    document.getElementById('cardText').textContent = displayTextWithoutLinkUrls(card.q);
+    renderFlashcardLinks(card);
+
     const face = document.getElementById('cardFace');
     face.classList.remove('flipping', 'answer-side');
     
@@ -746,11 +776,12 @@ document.getElementById('flashcardCard').addEventListener('click', () => {
     // Toggling both directions (not just reveal-once) lets the user flip back and
     // forth between question and answer before advancing.
     face.classList.add('flipping');
-    
+
     setTimeout(() => {
         currentSession.showingAnswer = !currentSession.showingAnswer;
-        textEl.textContent = currentSession.showingAnswer ? card.a : card.q;
+        textEl.textContent = displayTextWithoutLinkUrls(currentSession.showingAnswer ? card.a : card.q);
         face.classList.toggle('answer-side', currentSession.showingAnswer);
+        renderFlashcardLinks(card);
         face.classList.remove('flipping');
     }, 250);
 });
