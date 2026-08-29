@@ -1,0 +1,405 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+}
+
+#app {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.screen {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 40px 30px;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.container {
+    width: 100%;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: #667eea;
+}
+
+h2 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+h3 {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+}
+
+.subtitle {
+    color: #888;
+    font-size: 0.95em;
+    margin-bottom: 30px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+    margin: 10px 0;
+    width: 100%;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+.btn-back {
+    background: transparent;
+    color: #667eea;
+    padding: 8px 16px;
+    margin-bottom: 20px;
+    text-decoration: underline;
+}
+
+.btn-back:hover {
+    background: #f0f0f0;
+}
+
+.btn-large {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1em;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.card-group {
+    margin: 30px 0;
+}
+
+.status-panel {
+    background: #f8f9ff;
+    border: 2px solid #e0e7ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.status-panel h3 {
+    margin-bottom: 10px;
+}
+
+#contentInfo {
+    font-size: 0.95em;
+    color: #555;
+    line-height: 1.6;
+}
+
+.mode-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.setup-panel {
+    background: #f8f9ff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.setup-panel label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+}
+
+.input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+input[type="number"] {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #e0e7ff;
+    border-radius: 6px;
+    font-size: 1em;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.progress-bar {
+    margin-bottom: 30px;
+}
+
+.progress-bar span {
+    display: block;
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.bar {
+    width: 100%;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    background: #667eea;
+    transition: width 0.3s ease;
+}
+
+.card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px;
+    border-radius: 12px;
+    margin: 30px 0;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: scale(1.02);
+}
+
+.card-front p {
+    font-size: 1.3em;
+    line-height: 1.6;
+}
+
+.answer-panel {
+    background: #f0f8ff;
+    border-left: 4px solid #667eea;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 6px;
+}
+
+.answer-panel p {
+    font-size: 1em;
+    line-height: 1.7;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.controls .btn {
+    flex: 1;
+}
+
+.session-summary {
+    background: #f0f0f0;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.session-summary h3 {
+    color: #667eea;
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.session-summary p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.question {
+    background: #f8f9ff;
+    padding: 30px;
+    border-radius: 8px;
+    margin: 30px 0;
+}
+
+#questionText {
+    color: #333;
+    font-size: 1.2em;
+    line-height: 1.6;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.option {
+    background: white;
+    border: 2px solid #e0e0e0;
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.option:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+}
+
+.option input[type="radio"] {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.option.selected {
+    border-color: #667eea;
+    background: #f0f8ff;
+}
+
+.option.correct {
+    border-color: #4caf50;
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.option.incorrect {
+    border-color: #f44336;
+    background: #ffebee;
+    color: #c62828;
+}
+
+.quiz-summary {
+    background: #f0f0f0;
+    padding: 40px 30px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.score-display {
+    margin: 30px 0;
+}
+
+.score-number {
+    font-size: 3em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.score-label {
+    color: #888;
+    font-size: 1.1em;
+}
+
+#topicBreakdown {
+    margin-top: 30px;
+    text-align: left;
+}
+
+.topic-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.topic-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.topic-score {
+    color: #667eea;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .screen {
+        padding: 25px 15px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    .card {
+        min-height: 200px;
+        padding: 25px;
+    }
+
+    .card-front p {
+        font-size: 1.1em;
+    }
+
+    .score-number {
+        font-size: 2.5em;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+}

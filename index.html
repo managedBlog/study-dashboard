@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Mode selection screen -->
+        <div id="modeScreen" class="screen">
+            <div class="container">
+                <h1>Study Dashboard</h1>
+                <p class="subtitle">Load your exam content to get started</p>
+                
+                <div class="card-group">
+                    <button id="loadFileBtn" class="btn btn-primary btn-large">
+                        📁 Load Exam Files
+                    </button>
+                </div>
+                
+                <div id="fileStatus" class="status-panel" style="display: none;">
+                    <h3>Loaded Content</h3>
+                    <div id="contentInfo"></div>
+                </div>
+                
+                <div id="modeButtons" class="mode-buttons" style="display: none;">
+                    <button id="flashcardModeBtn" class="btn btn-secondary">
+                        🎴 Flashcard Mode
+                    </button>
+                    <button id="quizModeBtn" class="btn btn-secondary">
+                        📝 Quiz Mode
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flashcard mode -->
+        <div id="flashcardScreen" class="screen" style="display: none;">
+            <div class="container">
+                <button id="backFromFlashcard" class="btn btn-back">← Back</button>
+                
+                <h2>Flashcard Mode</h2>
+                
+                <div class="setup-panel" id="flashcardSetup">
+                    <label>Number of cards (10-50):</label>
+                    <div class="input-row">
+                        <input type="number" id="flashcardCount" min="10" max="50" value="20">
+                        <button id="startFlashcardBtn" class="btn btn-primary">Start</button>
+                    </div>
+                </div>
+                
+                <div id="flashcardSession" style="display: none;">
+                    <div class="progress-bar">
+                        <span id="flashcardProgress">1 / 20</span>
+                        <div class="bar">
+                            <div id="flashcardProgressFill" class="fill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" id="flashcardCard">
+                        <div class="card-front">
+                            <p id="cardQuestion">Question here...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <button id="revealBtn" class="btn btn-secondary">Reveal Answer</button>
+                    </div>
+                    
+                    <div class="answer-panel" id="answerPanel" style="display: none;">
+                        <p id="cardAnswer">Answer here...</p>
+                        <div class="controls">
+                            <button id="nextCardBtn" class="btn btn-primary">Next Card</button>
+                        </div>
+                    </div>
+                    
+                    <div class="session-summary" id="flashcardSummary" style="display: none;">
+                        <h3>Session Complete!</h3>
+                        <p>You reviewed <span id="cardsReviewed">0</span> cards</p>
+                        <button id="endFlashcardBtn" class="btn btn-primary">Back to Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz mode -->
+        <div id="quizScreen" class="screen" style="display: none;">
+            <div class="container">
+                <button id="backFromQuiz" class="btn btn-back">← Back</button>
+                
+                <h2>Quiz Mode</h2>
+                
+                <div class="setup-panel" id="quizSetup">
+                    <label>Number of questions (20-50):</label>
+                    <div class="input-row">
+                        <input type="number" id="quizCount" min="20" max="50" value="30">
+                        <button id="startQuizBtn" class="btn btn-primary">Start Quiz</button>
+                    </div>
+                </div>
+                
+                <div id="quizSession" style="display: none;">
+                    <div class="progress-bar">
+                        <span id="quizProgress">1 / 30</span>
+                        <div class="bar">
+                            <div id="quizProgressFill" class="fill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="question">
+                        <h3 id="questionText">Question here...</h3>
+                    </div>
+                    
+                    <div class="options" id="optionsContainer">
+                        <!-- Options A-D rendered here -->
+                    </div>
+                    
+                    <div class="controls">
+                        <button id="submitAnswerBtn" class="btn btn-primary" disabled>Submit Answer</button>
+                    </div>
+                    
+                    <div class="quiz-summary" id="quizSummary" style="display: none;">
+                        <h3>Quiz Complete!</h3>
+                        <div class="score-display">
+                            <p class="score-number" id="scoreNumber">0%</p>
+                            <p class="score-label">Correct</p>
+                        </div>
+                        <div id="topicBreakdown"></div>
+                        <button id="endQuizBtn" class="btn btn-primary">Back to Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="fileInput" multiple accept=".md,.json" style="display: none;">
+
+    <script src="app.js"></script>
+</body>
+</html>
