@@ -61,20 +61,22 @@
                     </div>
                     
                     <div class="card" id="flashcardCard">
-                        <div class="card-front">
-                            <p id="cardQuestion">Question here...</p>
+                        <div class="card-inner" id="cardInner">
+                            <div class="card-front">
+                                <p id="cardQuestion">Question here...</p>
+                            </div>
+                            <div class="card-back">
+                                <p id="cardAnswer">Answer here...</p>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="controls">
+                    <div class="controls" id="revealControls">
                         <button id="revealBtn" class="btn btn-secondary">Reveal Answer</button>
                     </div>
                     
-                    <div class="answer-panel" id="answerPanel" style="display: none;">
-                        <p id="cardAnswer">Answer here...</p>
-                        <div class="controls">
-                            <button id="nextCardBtn" class="btn btn-primary">Next Card</button>
-                        </div>
+                    <div class="controls" id="nextControls" style="display: none;">
+                        <button id="nextCardBtn" class="btn btn-primary">Next Card</button>
                     </div>
                     
                     <div class="session-summary" id="flashcardSummary" style="display: none;">
@@ -115,6 +117,11 @@
                     
                     <div class="options" id="optionsContainer">
                         <!-- Options A-D rendered here -->
+                    </div>
+                    
+                    <div class="feedback-panel" id="feedbackPanel" style="display: none;">
+                        <p class="feedback-result" id="feedbackResult"></p>
+                        <p class="feedback-explanation" id="feedbackExplanation"></p>
                     </div>
                     
                     <div class="controls">

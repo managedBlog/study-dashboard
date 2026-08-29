@@ -453,14 +453,16 @@ function showFlashcard() {
     document.getElementById('cardQuestion').textContent = card.q;
     document.getElementById('cardAnswer').textContent = card.a;
     
-    document.getElementById('answerPanel').style.display = 'none';
-    document.getElementById('revealBtn').style.display = 'block';
+    document.getElementById('cardInner').classList.remove('flipped');
+    document.getElementById('revealControls').style.display = 'flex';
+    document.getElementById('nextControls').style.display = 'none';
     document.getElementById('flashcardSummary').style.display = 'none';
 }
 
 document.getElementById('revealBtn').addEventListener('click', () => {
-    document.getElementById('revealBtn').style.display = 'none';
-    document.getElementById('answerPanel').style.display = 'block';
+    document.getElementById('cardInner').classList.add('flipped');
+    document.getElementById('revealControls').style.display = 'none';
+    document.getElementById('nextControls').style.display = 'flex';
 });
 
 document.getElementById('nextCardBtn').addEventListener('click', () => {
@@ -548,9 +550,13 @@ function startQuizSession(questions) {
     showQuestion();
 }
 
+let quizAnswerLocked = false;
+
 function showQuestion() {
     const q = currentSession.questions[currentSession.current];
     const total = currentSession.questions.length;
+    
+    quizAnswerLocked = false;
     
     document.getElementById('quizProgress').textContent = `${currentSession.current + 1} / ${total}`;
     document.getElementById('quizProgressFill').style.width = `${((currentSession.current + 1) / total) * 100}%`;
@@ -568,6 +574,7 @@ function showQuestion() {
             <strong>${opt.letter}.</strong> ${opt.text}
         `;
         label.addEventListener('click', () => {
+            if (quizAnswerLocked) return;
             document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
             label.classList.add('selected');
             currentSession.answers[q.id] = opt.letter;
@@ -576,23 +583,59 @@ function showQuestion() {
         container.appendChild(label);
     });
     
+    document.getElementById('feedbackPanel').style.display = 'none';
+    document.getElementById('submitAnswerBtn').textContent = 'Submit Answer';
     document.getElementById('submitAnswerBtn').disabled = true;
 }
 
 document.getElementById('submitAnswerBtn').addEventListener('click', () => {
     const q = currentSession.questions[currentSession.current];
-    const userAnswer = currentSession.answers[q.id];
     
-    if (userAnswer === q.answer) {
-        currentSession.score++;
-    }
-    
-    currentSession.current++;
-    
-    if (currentSession.current >= currentSession.questions.length) {
-        endQuizSession();
+    if (!quizAnswerLocked) {
+        // Phase 1: lock in the answer, reveal correctness + explanation
+        quizAnswerLocked = true;
+        const userAnswer = currentSession.answers[q.id];
+        const isCorrect = userAnswer === q.answer;
+        
+        if (isCorrect) currentSession.score++;
+        
+        document.querySelectorAll('.option').forEach((optEl) => {
+            const val = optEl.querySelector('input').value;
+            optEl.classList.add('locked');
+            if (val === q.answer) {
+                optEl.classList.add('correct');
+            } else if (val === userAnswer) {
+                optEl.classList.add('incorrect');
+            }
+        });
+        
+        const feedbackResult = document.getElementById('feedbackResult');
+        feedbackResult.textContent = isCorrect
+            ? '✅ Correct!'
+            : `❌ Incorrect — correct answer: ${q.answer}`;
+        feedbackResult.className = 'feedback-result ' + (isCorrect ? 'correct' : 'incorrect');
+        
+        const feedbackExplanation = document.getElementById('feedbackExplanation');
+        if (q.explanation) {
+            feedbackExplanation.textContent = q.explanation;
+            feedbackExplanation.style.display = 'block';
+        } else {
+            feedbackExplanation.style.display = 'none';
+        }
+        
+        document.getElementById('feedbackPanel').style.display = 'block';
+        
+        const isLastQuestion = currentSession.current >= currentSession.questions.length - 1;
+        document.getElementById('submitAnswerBtn').textContent = isLastQuestion ? 'View Results' : 'Next Question';
     } else {
-        showQuestion();
+        // Phase 2: advance to next question (or finish)
+        currentSession.current++;
+        
+        if (currentSession.current >= currentSession.questions.length) {
+            endQuizSession();
+        } else {
+            showQuestion();
+        }
     }
 });
 
