@@ -100,13 +100,31 @@ function extractSourceLinks(text) {
     return links;
 }
 
+function getSourceLabel(url) {
+    try {
+        const parsed = new URL(url);
+        const hostname = parsed.hostname.toLowerCase().replace(/^www\./, '');
+
+        if (hostname === 'learn.microsoft.com') return 'Microsoft Learn';
+        if (hostname === 'youtube.com' || hostname === 'youtu.be' || hostname.endsWith('.youtube.com')) return 'YouTube';
+        if (hostname === 'github.com') return 'GitHub';
+        if (hostname === 'docs.github.com') return 'GitHub Docs';
+
+        return hostname;
+    } catch {
+        return 'Source';
+    }
+}
+
 function displayFlashcardTextWithoutLinks(text) {
     return (text || '')
+        .replace(/\[SRC:[^\]]+\]/gi, '')
         .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '')
         .replace(/https?:\/\/\S+/g, '')
-        .replace(/\b(Sources?|References?)\s*:\s*(?=($|[.;,]))/gi, '')
+        .replace(/\b(Sources?|References?)\s*:\s*/gi, '')
         .replace(/\(\s*\)/g, '')
         .replace(/\s+([.,;:!?])/g, '$1')
+        .replace(/([.,;:!?])\1+/g, '$1')
         .replace(/\s{2,}/g, ' ')
         .trim();
 }
@@ -124,7 +142,10 @@ function renderFlashcardLinks(card) {
     }
 
     linksPanel.innerHTML = links
-        .map(url => `<p class="source-link">Source: <a href="${escapeAttribute(url)}" target="_blank" rel="noopener noreferrer">Link</a></p>`)
+        .map((url) => {
+            const label = getSourceLabel(url);
+            return `<p class="source-link">Source: <a href="${escapeAttribute(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a></p>`;
+        })
         .join('');
     linksPanel.style.display = 'block';
 }
