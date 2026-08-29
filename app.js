@@ -99,7 +99,10 @@ function parseFlashcardsMarkdown(content) {
     return cards;
 }
 
-function parseQuestionsMarkdown(content) {
+// Bank 1 - "Corpus Question Pool": ### Q#### header, *Topic · Difficulty* line,
+// > blockquote scenario (+ optional bold follow-up question line), - **A.** options,
+// **Answer: X**, then free-text explanation.
+function parseBank1Questions(content) {
     const questions = [];
     const lines = content.split('\n');
     
@@ -183,7 +186,227 @@ function parseQuestionsMarkdown(content) {
     
     if (current) questions.push(current);
     
-    return questions.map((q, i) => ({
+    return questions;
+}
+
+// Bank 2 - "Per-objective sets": grouped under "# Q: <Objective>" or "# L1 Q: <Objective>"
+// section headers, individual questions are bare "### N" headers with plain-text
+// (non-blockquote) question text and "- **A.**" options. Answers/explanations are NOT
+// inline - they live in a trailing "## ANSWER KEY" section per set, formatted as
+// "### N - **LETTER. short text**" followed by explanation paragraphs. Requires a
+// two-pass approach: parse questions, then back-fill from the answer key by set+number.
+function parseBank2Questions(content) {
+    const questions = [];
+    const lines = content.split('\n');
+    
+    const setRegex = /^#\s+(?:L1\s+)?Q:\s+(.+)$/;
+    const answerKeyHeaderRegex = /^##\s+ANSWER KEY\s*$/;
+    const qRegex = /^###\s+(\d+)\s*$/;
+    const optRegex = /^-\s+\*\*([A-F])\.\*\*\s+(.+)$/;
+    const ansKeyEntryRegex = /^###\s+(\d+)\s+-\s+\*\*([A-F])\./;
+    
+    let currentSetTitle = '';
+    let current = null;
+    let inOptions = false;
+    let mode = 'questions'; // 'questions' | 'answerkey'
+    const answerKeyMap = {}; // "setTitle::number" -> { letter, explanation }
+    let currentAnswerKey = null;
+    
+    for (const line of lines) {
+        const setMatch = line.match(setRegex);
+        if (setMatch) {
+            if (current) questions.push(current);
+            currentSetTitle = setMatch[1].trim();
+            mode = 'questions';
+            current = null;
+            inOptions = false;
+            currentAnswerKey = null;
+            continue;
+        }
+        
+        if (answerKeyHeaderRegex.test(line)) {
+            if (current) questions.push(current);
+            mode = 'answerkey';
+            current = null;
+            currentAnswerKey = null;
+            continue;
+        }
+        
+        if (mode === 'questions') {
+            const qMatch = line.match(qRegex);
+            if (qMatch) {
+                if (current) questions.push(current);
+                current = {
+                    number: parseInt(qMatch[1]),
+                    setTitle: currentSetTitle,
+                    topic: currentSetTitle,
+                    difficulty: '',
+                    text: '',
+                    options: [],
+                    answer: '',
+                    explanation: ''
+                };
+                inOptions = false;
+                continue;
+            }
+            
+            if (!current) continue;
+            
+            const optMatch = line.match(optRegex);
+            if (optMatch) {
+                inOptions = true;
+                current.options.push({ letter: optMatch[1], text: optMatch[2].trim() });
+                continue;
+            }
+            
+            if (line.trim() === '---' || line.startsWith('#')) continue;
+            
+            // Question text is plain paragraph text (not blockquoted) before options begin
+            if (!inOptions && line.trim()) {
+                current.text += (current.text ? ' ' : '') + line.trim();
+            }
+        } else {
+            // answerkey mode
+            const ansMatch = line.match(ansKeyEntryRegex);
+            if (ansMatch) {
+                currentAnswerKey = `${currentSetTitle}::${parseInt(ansMatch[1])}`;
+                answerKeyMap[currentAnswerKey] = { letter: ansMatch[2], explanation: '' };
+                continue;
+            }
+            
+            if (line.trim() === '---') {
+                // End of this answer entry's explanation - stop attributing trailing
+                // narrative text (e.g. domain-weight commentary) to the last answer.
+                currentAnswerKey = null;
+                continue;
+            }
+            
+            if (currentAnswerKey && line.trim() && !line.startsWith('#')) {
+                answerKeyMap[currentAnswerKey].explanation +=
+                    (answerKeyMap[currentAnswerKey].explanation ? ' ' : '') + line.trim();
+            }
+        }
+    }
+    
+    if (current) questions.push(current);
+    
+    questions.forEach(q => {
+        const ans = answerKeyMap[`${q.setTitle}::${q.number}`];
+        if (ans) {
+            q.answer = ans.letter;
+            q.explanation = ans.explanation;
+        }
+    });
+    
+    return questions;
+}
+
+// Bank 3 - "Official Module Assessments": grouped under "## Path N - <Title>" then
+// "### Module: <Title>" section headers. Questions are "**N.** text" (question text can
+// wrap onto following plain lines), options are "- A. text" (no bold letter, may be only
+// 3 options), and the answer is an inline blockquote immediately after the options:
+// "> **B** · **Confidence** · `TAG` - explanation...", possibly continued on further
+// "> " lines.
+function parseBank3Questions(content) {
+    const questions = [];
+    const lines = content.split('\n');
+    
+    const moduleRegex = /^###\s+Module:\s+(.+)$/;
+    const qRegex = /^\*\*(\d+)\.\*\*\s+(.+)$/;
+    // Options usually appear one per line ("- A. text"), but some are crammed onto a
+    // single line separated by "·" ("- A. text · B. text · **C. text**") - detect either.
+    const optLineRegex = /^-\s+\**[A-F]\./;
+    const optSegmentRegex = /^\**([A-F])\.\**\s*(.+?)\**\s*$/;
+    const ansRegex = /^>\s+\*\*([A-F])\*\*\s*(.*)$/;
+    
+    let currentModule = '';
+    let current = null;
+    let inOptions = false;
+    
+    for (const line of lines) {
+        const modMatch = line.match(moduleRegex);
+        if (modMatch) {
+            currentModule = modMatch[1].trim();
+            continue;
+        }
+        
+        const qMatch = line.match(qRegex);
+        if (qMatch) {
+            if (current) questions.push(current);
+            current = {
+                number: parseInt(qMatch[1]),
+                topic: currentModule,
+                difficulty: '',
+                text: qMatch[2].trim(),
+                options: [],
+                answer: '',
+                explanation: ''
+            };
+            inOptions = false;
+            continue;
+        }
+        
+        if (!current) continue;
+        
+        if (optLineRegex.test(line)) {
+            inOptions = true;
+            const segments = line.replace(/^-\s+/, '').split(/\s*·\s*/);
+            segments.forEach(seg => {
+                const segMatch = seg.match(optSegmentRegex);
+                if (segMatch) {
+                    current.options.push({ letter: segMatch[1], text: segMatch[2].replace(/\*\*/g, '').trim() });
+                }
+            });
+            continue;
+        }
+        
+        const ansMatch = line.match(ansRegex);
+        if (ansMatch) {
+            current.answer = ansMatch[1];
+            const rest = ansMatch[2].replace(/^·\s*/, '').trim();
+            if (rest) current.explanation += (current.explanation ? ' ' : '') + rest;
+            continue;
+        }
+        
+        // Explanation continuation (further blockquote lines after the answer line)
+        if (line.startsWith('> ') && current.answer) {
+            current.explanation += (current.explanation ? ' ' : '') + line.substring(2).trim();
+            continue;
+        }
+        
+        // Question text continuation (wraps onto following plain lines before options)
+        if (!inOptions && !current.answer && line.trim() && !line.startsWith('#') && !line.startsWith('>')) {
+            current.text += ' ' + line.trim();
+        }
+    }
+    
+    if (current) questions.push(current);
+    
+    return questions;
+}
+
+// The source file concatenates 3 independently-formatted "banks" of questions. Split on
+// the bank header markers and run each bank through its own parser, then merge results
+// into one flat, uniformly-shaped array with globally unique IDs.
+function parseQuestionsMarkdown(content) {
+    const bank1Idx = content.indexOf('# BANK 1');
+    const bank2Idx = content.indexOf('# BANK 2');
+    const bank3Idx = content.indexOf('# BANK 3');
+    
+    const bank1Content = content.slice(Math.max(bank1Idx, 0), bank2Idx > -1 ? bank2Idx : undefined);
+    const bank2Content = bank2Idx > -1 ? content.slice(bank2Idx, bank3Idx > -1 ? bank3Idx : undefined) : '';
+    const bank3Content = bank3Idx > -1 ? content.slice(bank3Idx) : '';
+    
+    const bank1 = parseBank1Questions(bank1Content).map(q => ({ ...q, bank: 'Corpus Question Pool' }));
+    const bank2 = bank2Content ? parseBank2Questions(bank2Content).map(q => ({ ...q, bank: 'Per-Objective Sets' })) : [];
+    const bank3 = bank3Content ? parseBank3Questions(bank3Content).map(q => ({ ...q, bank: 'Official Module Assessments' })) : [];
+    
+    // Drop anything that couldn't be matched to a scoreable answer - can't quiz on it.
+    const usable = [...bank1, ...bank2, ...bank3].filter(
+        q => q.answer && q.options.length >= 2 && q.text.trim()
+    );
+    
+    return usable.map((q, i) => ({
         ...q,
         id: `q_${i}`,
         topics: q.topic ? [q.topic] : []
@@ -443,7 +666,8 @@ function startFlashcardSession(cards) {
         mode: 'flashcard',
         cards: cards,
         current: 0,
-        reviewed: 0
+        reviewed: 0,
+        showingAnswer: false
     };
     
     document.getElementById('flashcardSetup').style.display = 'none';
@@ -459,17 +683,17 @@ function showFlashcard() {
     document.getElementById('flashcardProgress').textContent = `${currentSession.current + 1} / ${total}`;
     document.getElementById('flashcardProgressFill').style.width = `${((currentSession.current + 1) / total) * 100}%`;
     
+    currentSession.showingAnswer = false;
     document.getElementById('cardText').textContent = card.q;
     
     const face = document.getElementById('cardFace');
     face.classList.remove('flipping', 'answer-side');
     
-    document.getElementById('revealControls').style.display = 'flex';
-    document.getElementById('nextControls').style.display = 'none';
+    document.getElementById('nextControls').style.display = 'flex';
     document.getElementById('flashcardSummary').style.display = 'none';
 }
 
-document.getElementById('revealBtn').addEventListener('click', () => {
+document.getElementById('flashcardCard').addEventListener('click', () => {
     const card = currentSession.cards[currentSession.current];
     const face = document.getElementById('cardFace');
     const textEl = document.getElementById('cardText');
@@ -478,16 +702,16 @@ document.getElementById('revealBtn').addEventListener('click', () => {
     // while it's edge-on, then rotate back to 0deg showing the new content. This
     // avoids relying on backface-visibility, which some browsers render unreliably
     // (e.g. it can silently stop hiding the back face when combined with overflow).
+    // Toggling both directions (not just reveal-once) lets the user flip back and
+    // forth between question and answer before advancing.
     face.classList.add('flipping');
     
     setTimeout(() => {
-        textEl.textContent = card.a;
-        face.classList.add('answer-side');
+        currentSession.showingAnswer = !currentSession.showingAnswer;
+        textEl.textContent = currentSession.showingAnswer ? card.a : card.q;
+        face.classList.toggle('answer-side', currentSession.showingAnswer);
         face.classList.remove('flipping');
     }, 250);
-    
-    document.getElementById('revealControls').style.display = 'none';
-    document.getElementById('nextControls').style.display = 'flex';
 });
 
 document.getElementById('nextCardBtn').addEventListener('click', () => {
