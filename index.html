@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
     <title>Study Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=5">
+    <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
     <div id="app">
@@ -66,11 +66,11 @@
                         </div>
                     </div>
                     <p class="card-hint">Tap the card to flip between question and answer</p>
-                    <div class="flashcard-link-panel" id="flashcardLinks" style="display: none;"></div>
-
                     <div class="controls" id="nextControls">
+                        <button id="prevCardBtn" class="btn btn-secondary">Previous Card</button>
                         <button id="nextCardBtn" class="btn btn-primary">Next Card</button>
                     </div>
+                    <div class="flashcard-link-panel" id="flashcardLinks" style="display: none;"></div>
                     
                     <div class="session-summary" id="flashcardSummary" style="display: none;">
                         <h3>Session Complete!</h3>
@@ -138,6 +138,6 @@
     <!-- Hidden file input -->
     <input type="file" id="fileInput" multiple accept=".md,.json" style="display: none;">
 
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
 </body>
 </html>

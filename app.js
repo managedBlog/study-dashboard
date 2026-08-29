@@ -23,6 +23,10 @@ function escapeHtml(str) {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function escapeAttribute(str) {
+    return escapeHtml(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 // Converts markdown-style [label](url) links and bare http(s) URLs in plain text into
 // clickable <a> tags, so rationale/explanation text with reference links (e.g. Microsoft
 // Learn pages) can be opened directly. Escapes HTML first for safety, then swaps links in
@@ -60,28 +64,68 @@ function hasLinks(text) {
     return /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|https?:\/\/\S+/.test(text);
 }
 
-function displayTextWithoutLinkUrls(text) {
+function trimSourceUrl(url) {
+    return url.replace(/[.,;:)]+$/, '');
+}
+
+function extractSourceLinks(text) {
+    const source = text || '';
+    const links = [];
+    const markdownRanges = [];
+    const seen = new Set();
+    let match;
+    
+    const addLink = (url) => {
+        const cleanUrl = trimSourceUrl(url);
+        if (!seen.has(cleanUrl)) {
+            seen.add(cleanUrl);
+            links.push(cleanUrl);
+        }
+    };
+    
+    const markdownLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    while ((match = markdownLinkRegex.exec(source)) !== null) {
+        markdownRanges.push([match.index, match.index + match[0].length]);
+        addLink(match[2]);
+    }
+    
+    const bareUrlRegex = /https?:\/\/[^\s<)]+/g;
+    while ((match = bareUrlRegex.exec(source)) !== null) {
+        const insideMarkdown = markdownRanges.some(([start, end]) => match.index >= start && match.index < end);
+        if (!insideMarkdown) {
+            addLink(match[0]);
+        }
+    }
+    
+    return links;
+}
+
+function displayFlashcardTextWithoutLinks(text) {
     return (text || '')
-        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
-        .replace(/https?:\/\/\S+/g, 'link below');
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '')
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/\b(Sources?|References?)\s*:\s*(?=($|[.;,]))/gi, '')
+        .replace(/\(\s*\)/g, '')
+        .replace(/\s+([.,;:!?])/g, '$1')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
 }
 
 function renderFlashcardLinks(card) {
     const linksPanel = document.getElementById('flashcardLinks');
     if (!linksPanel) return;
 
-    const answer = card?.a || '';
+    const links = extractSourceLinks(card?.a || '');
 
-    if (!currentSession.showingAnswer || !hasLinks(answer)) {
+    if (!currentSession.showingAnswer || links.length === 0) {
         linksPanel.innerHTML = '';
         linksPanel.style.display = 'none';
         return;
     }
 
-    linksPanel.innerHTML = `
-        <strong>Answer links / rationale</strong>
-        <p>${linkifyText(answer)}</p>
-    `;
+    linksPanel.innerHTML = links
+        .map(url => `<p class="source-link">Source: <a href="${escapeAttribute(url)}" target="_blank" rel="noopener noreferrer">Link</a></p>`)
+        .join('');
     linksPanel.style.display = 'block';
 }
 
@@ -752,14 +796,16 @@ function showFlashcard() {
     
     document.getElementById('flashcardProgress').textContent = `${currentSession.current + 1} / ${total}`;
     document.getElementById('flashcardProgressFill').style.width = `${((currentSession.current + 1) / total) * 100}%`;
+    currentSession.reviewed = Math.max(currentSession.reviewed, currentSession.current + 1);
 
     currentSession.showingAnswer = false;
-    document.getElementById('cardText').textContent = displayTextWithoutLinkUrls(card.q);
+    document.getElementById('cardText').textContent = displayFlashcardTextWithoutLinks(card.q);
     renderFlashcardLinks(card);
 
     const face = document.getElementById('cardFace');
     face.classList.remove('flipping', 'answer-side');
     
+    document.getElementById('prevCardBtn').disabled = currentSession.current === 0;
     document.getElementById('nextControls').style.display = 'flex';
     document.getElementById('flashcardSummary').style.display = 'none';
 }
@@ -779,18 +825,24 @@ document.getElementById('flashcardCard').addEventListener('click', () => {
 
     setTimeout(() => {
         currentSession.showingAnswer = !currentSession.showingAnswer;
-        textEl.textContent = displayTextWithoutLinkUrls(currentSession.showingAnswer ? card.a : card.q);
+        textEl.textContent = displayFlashcardTextWithoutLinks(currentSession.showingAnswer ? card.a : card.q);
         face.classList.toggle('answer-side', currentSession.showingAnswer);
         renderFlashcardLinks(card);
         face.classList.remove('flipping');
     }, 250);
 });
 
+document.getElementById('prevCardBtn').addEventListener('click', () => {
+    if (currentSession.current === 0) return;
+    currentSession.current--;
+    showFlashcard();
+});
+
 document.getElementById('nextCardBtn').addEventListener('click', () => {
     currentSession.current++;
-    currentSession.reviewed++;
     
     if (currentSession.current >= currentSession.cards.length) {
+        currentSession.reviewed = currentSession.cards.length;
         endFlashcardSession();
     } else {
         showFlashcard();

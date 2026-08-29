@@ -257,10 +257,9 @@ input[type="number"]:focus {
     line-height: 1.6;
 }
 
-.flashcard-link-panel strong {
-    display: block;
-    margin-bottom: 8px;
-    color: #667eea;
+.source-link {
+    margin: 4px 0;
+    font-weight: 600;
 }
 
 .flashcard-link-panel a {
@@ -281,6 +280,8 @@ input[type="number"]:focus {
 
 .controls .btn {
     flex: 1;
+    width: auto;
+    margin: 0;
 }
 
 .session-summary {
