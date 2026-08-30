@@ -522,7 +522,7 @@ function parseBank3Questions(content) {
 
 function parseUnifiedQuestions(content) {
     const questions = [];
-    const lines = content.split('\n');
+    const lines = content.replace(/\r\n/g, '\n').split('\n');
 
     const qRegex = /^###\s+Q(\d+)\s+—\s+(.+)$/;
     const metadataRegex = /^\*Bank:\s*([^·*]+?)\s*·\s*Domain:\s*([^·*]+?)\s*·\s*Difficulty:\s*([^*]+)\*$/;
@@ -533,6 +533,11 @@ function parseUnifiedQuestions(content) {
 
     let current = null;
     let inOptions = false;
+    const appendExplanationLine = (lineText) => {
+        const text = lineText.trim();
+        if (!text) return;
+        current.explanation += (current.explanation ? '\n' : '') + text;
+    };
 
     const pushCurrent = () => {
         if (!current) return;
@@ -617,9 +622,9 @@ function parseUnifiedQuestions(content) {
             }
         } else if (line.trim()) {
             if (line.startsWith('> ')) {
-                current.explanation += (current.explanation ? ' ' : '') + line.substring(2).trim();
-            } else if (!line.startsWith('#') && !line.startsWith('*') && !line.startsWith('-')) {
-                current.explanation += (current.explanation ? ' ' : '') + line.trim();
+                appendExplanationLine(line.substring(2));
+            } else {
+                appendExplanationLine(line);
             }
         }
     }

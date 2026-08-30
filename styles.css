@@ -389,6 +389,8 @@ input[type="number"]:focus {
 .feedback-explanation {
     color: #333;
     line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .feedback-explanation a {
