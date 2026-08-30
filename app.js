@@ -520,33 +520,156 @@ function parseBank3Questions(content) {
     return questions;
 }
 
-// The source file concatenates 3 independently-formatted "banks" of questions. Split on
-// the bank header markers and run each bank through its own parser, then merge results
-// into one flat, uniformly-shaped array with globally unique IDs.
+function parseUnifiedQuestions(content) {
+    const questions = [];
+    const lines = content.split('\n');
+
+    const qRegex = /^###\s+Q(\d+)\s+—\s+(.+)$/;
+    const metadataRegex = /^\*Bank:\s*([^·*]+?)\s*·\s*Domain:\s*([^·*]+?)\s*·\s*Difficulty:\s*([^*]+)\*$/;
+    const optionRegex = /^-\s+\*\*([A-D])\.\*\*\s+(.+)$/;
+    const answerRegex = /^\*\*Answer:\*\*\s*([A-D])\s*$/;
+    const confidenceRegex = /^\*\*Confidence:\*\*\s*(.+)$/;
+    const sourceRegex = /^\*\*Source:\*\*\s*(.+)$/;
+
+    let current = null;
+    let inOptions = false;
+
+    const pushCurrent = () => {
+        if (!current) return;
+        current.text = current.text.trim();
+        current.explanation = current.explanation.trim();
+        questions.push(current);
+    };
+
+    for (const line of lines) {
+        const qMatch = line.match(qRegex);
+        if (qMatch) {
+            pushCurrent();
+            current = {
+                number: parseInt(qMatch[1]),
+                title: qMatch[2].trim(),
+                topic: '',
+                difficulty: '',
+                text: '',
+                options: [],
+                answer: '',
+                explanation: '',
+                source: '',
+                bank: ''
+            };
+            inOptions = false;
+            continue;
+        }
+
+        if (!current) continue;
+
+        const metadataMatch = line.match(metadataRegex);
+        if (metadataMatch && !current.topic) {
+            current.bank = metadataMatch[1].trim();
+            current.topic = metadataMatch[2].trim();
+            current.difficulty = metadataMatch[3].trim();
+            continue;
+        }
+
+        const optionMatch = line.match(optionRegex);
+        if (optionMatch) {
+            inOptions = true;
+            current.options.push({ letter: optionMatch[1], text: optionMatch[2].trim() });
+            continue;
+        }
+
+        const answerMatch = line.match(answerRegex);
+        if (answerMatch) {
+            current.answer = answerMatch[1];
+            inOptions = false;
+            continue;
+        }
+
+        const confidenceMatch = line.match(confidenceRegex);
+        if (confidenceMatch) {
+            current.confidence = confidenceMatch[1].trim();
+            continue;
+        }
+
+        const sourceMatch = line.match(sourceRegex);
+        if (sourceMatch) {
+            current.source = sourceMatch[1].trim();
+            continue;
+        }
+
+        if (!current.answer) {
+            if (line.startsWith('> ')) {
+                current.text += (current.text ? ' ' : '') + line.substring(2).trim();
+                continue;
+            }
+
+            if (!inOptions) {
+                const promptMatch = line.match(/^\*\*(.+)\*\*$/);
+                if (promptMatch) {
+                    current.text += (current.text ? ' ' : '') + promptMatch[1].trim();
+                    continue;
+                }
+
+                if (line.trim() && !line.startsWith('#') && !line.startsWith('*') && !line.startsWith('-')) {
+                    current.text += (current.text ? ' ' : '') + line.trim();
+                    continue;
+                }
+            }
+        } else if (line.trim()) {
+            if (line.startsWith('> ')) {
+                current.explanation += (current.explanation ? ' ' : '') + line.substring(2).trim();
+            } else if (!line.startsWith('#') && !line.startsWith('*') && !line.startsWith('-')) {
+                current.explanation += (current.explanation ? ' ' : '') + line.trim();
+            }
+        }
+    }
+
+    pushCurrent();
+    return questions;
+}
+
+// The source file may be either a unified per-question format or the legacy file that
+// concatenates 3 independently-formatted banks. Detect unified first, then fall back to
+// the legacy bank split/parsers.
 function parseQuestionsMarkdown(content) {
-    const bank1Idx = content.indexOf('# BANK 1');
-    const bank2Idx = content.indexOf('# BANK 2');
-    const bank3Idx = content.indexOf('# BANK 3');
-    
-    const bank1Content = content.slice(Math.max(bank1Idx, 0), bank2Idx > -1 ? bank2Idx : undefined);
-    const bank2Content = bank2Idx > -1 ? content.slice(bank2Idx, bank3Idx > -1 ? bank3Idx : undefined) : '';
-    const bank3Content = bank3Idx > -1 ? content.slice(bank3Idx) : '';
-    
-    const bank1 = parseBank1Questions(bank1Content).map(q => ({ ...q, bank: 'Corpus Question Pool' }));
-    const bank2 = bank2Content ? parseBank2Questions(bank2Content).map(q => ({ ...q, bank: 'Per-Objective Sets' })) : [];
-    const bank3 = bank3Content ? parseBank3Questions(bank3Content).map(q => ({ ...q, bank: 'Official Module Assessments' })) : [];
-    
+    const unifiedHeaderRegex = /^###\s+Q\d{3,4}\s+—\s+.+$/m;
+    const unifiedMetadataRegex = /^\*Bank:\s*[^*]+·\s*Domain:\s*[^*]+·\s*Difficulty:\s*[^*]+\*$/m;
+
+    let parsed;
+
+    if (unifiedHeaderRegex.test(content) && unifiedMetadataRegex.test(content)) {
+        parsed = parseUnifiedQuestions(content);
+        if (parsed.length === 0) {
+            throw new Error('Detected unified question format, but failed to parse any question blocks.');
+        }
+    } else {
+        const bank1Idx = content.indexOf('# BANK 1');
+        const bank2Idx = content.indexOf('# BANK 2');
+        const bank3Idx = content.indexOf('# BANK 3');
+
+        const bank1Content = content.slice(Math.max(bank1Idx, 0), bank2Idx > -1 ? bank2Idx : undefined);
+        const bank2Content = bank2Idx > -1 ? content.slice(bank2Idx, bank3Idx > -1 ? bank3Idx : undefined) : '';
+        const bank3Content = bank3Idx > -1 ? content.slice(bank3Idx) : '';
+
+        const bank1 = parseBank1Questions(bank1Content).map(q => ({ ...q, bank: 'Corpus Question Pool' }));
+        const bank2 = bank2Content ? parseBank2Questions(bank2Content).map(q => ({ ...q, bank: 'Per-Objective Sets' })) : [];
+        const bank3 = bank3Content ? parseBank3Questions(bank3Content).map(q => ({ ...q, bank: 'Official Module Assessments' })) : [];
+
+        parsed = [...bank1, ...bank2, ...bank3];
+    }
+
     // Drop anything that couldn't be matched to a scoreable answer - can't quiz on it.
-    const usable = [...bank1, ...bank2, ...bank3].filter(
+    const usable = parsed.filter(
         q => q.answer && q.options.length >= 2 && q.text.trim()
     );
-    
+
     return usable.map((q, i) => ({
         ...q,
         id: `q_${i}`,
         topics: q.topic ? [q.topic] : []
     }));
 }
+
 
 async function loadFilesFromInput(files) {
     let metadata = null;
