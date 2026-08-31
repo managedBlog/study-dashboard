@@ -45,9 +45,9 @@
                 <h2>Flashcard Mode</h2>
                 
                 <div class="setup-panel" id="flashcardSetup">
-                    <label>Number of cards (10-50):</label>
+                    <label>Number of cards:</label>
                     <div class="input-row">
-                        <input type="number" id="flashcardCount" min="10" max="50" value="20">
+                        <input type="number" id="flashcardCount" min="1" value="20">
                         <button id="startFlashcardBtn" class="btn btn-primary">Start</button>
                     </div>
                 </div>
@@ -72,11 +72,12 @@
                     </div>
                     <div class="flashcard-link-panel" id="flashcardLinks" style="display: none;"></div>
                     
-                    <div class="session-summary" id="flashcardSummary" style="display: none;">
-                        <h3>Session Complete!</h3>
-                        <p>You reviewed <span id="cardsReviewed">0</span> cards</p>
-                        <button id="endFlashcardBtn" class="btn btn-primary">Back to Menu</button>
-                    </div>
+                </div>
+
+                <div class="session-summary" id="flashcardSummary" style="display: none;">
+                    <h3>Session Complete!</h3>
+                    <p>You reviewed <span id="cardsReviewed">0</span> cards</p>
+                    <button id="endFlashcardBtn" class="btn btn-primary">Back to Menu</button>
                 </div>
             </div>
         </div>
@@ -89,9 +90,9 @@
                 <h2>Quiz Mode</h2>
                 
                 <div class="setup-panel" id="quizSetup">
-                    <label>Number of questions (20-50):</label>
+                    <label>Number of questions:</label>
                     <div class="input-row">
-                        <input type="number" id="quizCount" min="20" max="50" value="30">
+                        <input type="number" id="quizCount" min="1" value="30">
                         <button id="startQuizBtn" class="btn btn-primary">Start Quiz</button>
                     </div>
                 </div>
@@ -121,15 +122,16 @@
                         <button id="submitAnswerBtn" class="btn btn-primary" disabled>Submit Answer</button>
                     </div>
                     
-                    <div class="quiz-summary" id="quizSummary" style="display: none;">
-                        <h3>Quiz Complete!</h3>
-                        <div class="score-display">
-                            <p class="score-number" id="scoreNumber">0%</p>
-                            <p class="score-label">Correct</p>
-                        </div>
-                        <div id="topicBreakdown"></div>
-                        <button id="endQuizBtn" class="btn btn-primary">Back to Menu</button>
+                </div>
+
+                <div class="quiz-summary" id="quizSummary" style="display: none;">
+                    <h3>Quiz Complete!</h3>
+                    <div class="score-display">
+                        <p class="score-number" id="scoreNumber">0%</p>
+                        <p class="score-label">Correct</p>
                     </div>
+                    <div id="topicBreakdown"></div>
+                    <button id="endQuizBtn" class="btn btn-primary">Back to Menu</button>
                 </div>
             </div>
         </div>
@@ -138,6 +140,6 @@
     <!-- Hidden file input -->
     <input type="file" id="fileInput" multiple accept=".md,.json" style="display: none;">
 
-    <script src="app.js?v=7"></script>
+    <script src="app.js?v=8"></script>
 </body>
 </html>

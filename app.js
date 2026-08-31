@@ -571,7 +571,8 @@ function parseUnifiedQuestions(content) {
         const metadataMatch = line.match(metadataRegex);
         if (metadataMatch && !current.topic) {
             current.bank = metadataMatch[1].trim();
-            current.topic = metadataMatch[2].trim();
+            const parsedTopic = metadataMatch[2].trim();
+            current.topic = parsedTopic === '(none)' ? '' : parsedTopic;
             current.difficulty = metadataMatch[3].trim();
             continue;
         }
@@ -723,43 +724,100 @@ async function loadFilesFromInput(files) {
         title: metadata.examTitle,
         metadata
     };
-    
+
     const tx = db.transaction(
         [STORE_NAMES.exams, STORE_NAMES.flashcards, STORE_NAMES.questions],
         'readwrite'
     );
     
     await new Promise((resolve, reject) => {
-        tx.objectStore(STORE_NAMES.exams).put(exam);
-        
-        flashcards.forEach((card, i) => {
-            tx.objectStore(STORE_NAMES.flashcards).put({
-                id: `fc_${examId}_${i}`,
-                examId,
-                q: card.question,
-                a: card.answer
+        const flashcardStore = tx.objectStore(STORE_NAMES.flashcards);
+        const questionStore = tx.objectStore(STORE_NAMES.questions);
+        let clearedStores = 0;
+
+        const writeReplacementContent = () => {
+            tx.objectStore(STORE_NAMES.exams).put(exam);
+
+            flashcards.forEach((card, i) => {
+                flashcardStore.put({
+                    id: `fc_${examId}_${i}`,
+                    examId,
+                    q: card.question,
+                    a: card.answer
+                });
             });
-        });
-        
-        questions.forEach((q) => {
-            tx.objectStore(STORE_NAMES.questions).put({
-                id: q.id,
-                examId,
-                text: q.text,
-                options: q.options,
-                answer: q.answer,
-                explanation: q.explanation,
-                difficulty: q.difficulty,
-                topics: q.topics
+
+            questions.forEach((q) => {
+                questionStore.put({
+                    // Question IDs such as q_0 repeat across packs. Scope the IndexedDB
+                    // key to the exam so one import cannot overwrite another pack.
+                    id: `${examId}_${q.id}`,
+                    examId,
+                    text: q.text,
+                    options: q.options,
+                    answer: q.answer,
+                    explanation: q.explanation,
+                    difficulty: q.difficulty,
+                    topics: q.topics
+                });
             });
-        });
-        
+        };
+
+        // Delete and replace in one transaction so a failed import rolls back to
+        // the previously working pack instead of leaving it empty.
+        for (const store of [flashcardStore, questionStore]) {
+            const cursorRequest = store.openCursor();
+            cursorRequest.onerror = () => reject(cursorRequest.error);
+            cursorRequest.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    if (cursor.value.examId === examId) {
+                        cursor.delete();
+                    }
+                    cursor.continue();
+                    return;
+                }
+
+                clearedStores++;
+                if (clearedStores === 2) {
+                    writeReplacementContent();
+                }
+            };
+        }
+
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
     });
     
     currentExam = exam;
     return { exam, flashcardCount: flashcards.length, questionCount: questions.length };
+}
+
+async function getStoredItemsForExam(storeName, examId) {
+    return new Promise((resolve, reject) => {
+        const request = db.transaction([storeName]).objectStore(storeName).getAll();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            resolve(request.result.filter((item) => item.examId === examId));
+        };
+    });
+}
+
+function configureCountInput(inputId, availableCount) {
+    const input = document.getElementById(inputId);
+    const requested = parseInt(input.value, 10);
+    input.max = String(availableCount);
+    input.value = String(Math.min(
+        Number.isFinite(requested) && requested > 0 ? requested : availableCount,
+        availableCount
+    ));
+}
+
+function getRequestedCount(inputId, availableCount) {
+    const requested = parseInt(document.getElementById(inputId).value, 10);
+    if (!Number.isFinite(requested) || requested < 1) return availableCount;
+    return Math.min(requested, availableCount);
 }
 
 // ============================================================================
@@ -799,18 +857,19 @@ async function selectRandomItems(examId, mode, count, allItemIds) {
     // Case 1: Enough unseen items
     if (unseenPool.length >= count) {
         selected = shuffleArray(unseenPool).slice(0, count);
+        tracker.seenIds.push(...selected);
     } else {
         // Case 2: Not enough unseen → use all unseen, reset, continue from full pool
         selected = unseenPool;
         tracker.cycle++;
-        tracker.seenIds = [];
         const remaining = count - selected.length;
-        const fullPoolShuffled = shuffleArray(allItemIds);
-        selected = selected.concat(fullPoolShuffled.slice(0, remaining));
+        const selectedSet = new Set(selected);
+        const refillPool = shuffleArray(allItemIds.filter(id => !selectedSet.has(id)));
+        const refill = refillPool.slice(0, remaining);
+        selected = selected.concat(refill);
+        tracker.seenIds = refill;
     }
     
-    // Update tracker
-    tracker.seenIds.push(...selected);
     await saveProgressTracker(tracker);
     
     return selected;
@@ -847,6 +906,8 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
         
         document.getElementById('fileStatus').style.display = 'block';
         document.getElementById('modeButtons').style.display = 'flex';
+        configureCountInput('flashcardCount', flashcardCount);
+        configureCountInput('quizCount', questionCount);
         
         e.target.value = ''; // Reset input
     } catch (err) {
@@ -857,17 +918,24 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
 document.getElementById('flashcardModeBtn').addEventListener('click', () => {
     document.getElementById('modeScreen').style.display = 'none';
     document.getElementById('flashcardScreen').style.display = 'block';
+    document.getElementById('flashcardSetup').style.display = 'block';
+    document.getElementById('flashcardSession').style.display = 'none';
+    document.getElementById('flashcardSummary').style.display = 'none';
 });
 
 document.getElementById('quizModeBtn').addEventListener('click', () => {
     document.getElementById('modeScreen').style.display = 'none';
     document.getElementById('quizScreen').style.display = 'block';
+    document.getElementById('quizSetup').style.display = 'block';
+    document.getElementById('quizSession').style.display = 'none';
+    document.getElementById('quizSummary').style.display = 'none';
 });
 
 document.getElementById('backFromFlashcard').addEventListener('click', () => {
     document.getElementById('flashcardScreen').style.display = 'none';
     document.getElementById('flashcardSetup').style.display = 'block';
     document.getElementById('flashcardSession').style.display = 'none';
+    document.getElementById('flashcardSummary').style.display = 'none';
     document.getElementById('modeScreen').style.display = 'block';
 });
 
@@ -875,6 +943,7 @@ document.getElementById('backFromQuiz').addEventListener('click', () => {
     document.getElementById('quizScreen').style.display = 'none';
     document.getElementById('quizSetup').style.display = 'block';
     document.getElementById('quizSession').style.display = 'none';
+    document.getElementById('quizSummary').style.display = 'none';
     document.getElementById('modeScreen').style.display = 'block';
 });
 
@@ -883,21 +952,14 @@ document.getElementById('backFromQuiz').addEventListener('click', () => {
 // ============================================================================
 
 document.getElementById('startFlashcardBtn').addEventListener('click', async () => {
-    const count = Math.max(10, Math.min(50, parseInt(document.getElementById('flashcardCount').value) || 20));
-    
-    // Get all flashcard IDs
-    const allCards = await new Promise((resolve, reject) => {
-        const tx = db.transaction([STORE_NAMES.flashcards]);
-        const request = tx.objectStore(STORE_NAMES.flashcards)
-            .getAll();
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-    });
+    const allCards = await getStoredItemsForExam(STORE_NAMES.flashcards, currentExam.id);
     
     if (allCards.length === 0) {
         alert('No flashcards are loaded. Please use "Load Exam Files" first.');
         return;
     }
+
+    const count = getRequestedCount('flashcardCount', allCards.length);
     
     const cardIds = allCards.map(c => c.id);
     const selectedIds = await selectRandomItems(currentExam.id, 'flashcard', count, cardIds);
@@ -935,6 +997,7 @@ function startFlashcardSession(cards) {
     
     document.getElementById('flashcardSetup').style.display = 'none';
     document.getElementById('flashcardSession').style.display = 'block';
+    document.getElementById('flashcardSummary').style.display = 'none';
     
     showFlashcard();
 }
@@ -1008,6 +1071,7 @@ document.getElementById('endFlashcardBtn').addEventListener('click', () => {
     document.getElementById('flashcardScreen').style.display = 'none';
     document.getElementById('flashcardSetup').style.display = 'block';
     document.getElementById('flashcardSession').style.display = 'none';
+    document.getElementById('flashcardSummary').style.display = 'none';
     document.getElementById('modeScreen').style.display = 'block';
 });
 
@@ -1016,21 +1080,14 @@ document.getElementById('endFlashcardBtn').addEventListener('click', () => {
 // ============================================================================
 
 document.getElementById('startQuizBtn').addEventListener('click', async () => {
-    const count = Math.max(20, Math.min(50, parseInt(document.getElementById('quizCount').value) || 30));
-    
-    // Get all question IDs
-    const allQuestions = await new Promise((resolve, reject) => {
-        const tx = db.transaction([STORE_NAMES.questions]);
-        const request = tx.objectStore(STORE_NAMES.questions)
-            .getAll();
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-    });
+    const allQuestions = await getStoredItemsForExam(STORE_NAMES.questions, currentExam.id);
     
     if (allQuestions.length === 0) {
         alert('No questions are loaded. Please use "Load Exam Files" first.');
         return;
     }
+
+    const count = getRequestedCount('quizCount', allQuestions.length);
     
     const questionIds = allQuestions.map(q => q.id);
     const selectedIds = await selectRandomItems(currentExam.id, 'quiz', count, questionIds);
@@ -1068,6 +1125,7 @@ function startQuizSession(questions) {
     
     document.getElementById('quizSetup').style.display = 'none';
     document.getElementById('quizSession').style.display = 'block';
+    document.getElementById('quizSummary').style.display = 'none';
     
     showQuestion();
 }
@@ -1171,7 +1229,7 @@ async function endQuizSession() {
     // Topic breakdown
     const topicScores = {};
     currentSession.questions.forEach((q) => {
-        const topic = q.topics[0] || 'General';
+        const topic = (q.topics && q.topics[0]) || 'General';
         if (!topicScores[topic]) topicScores[topic] = { correct: 0, total: 0 };
         topicScores[topic].total++;
         if (currentSession.answers[q.id] === q.answer) {
@@ -1192,18 +1250,22 @@ async function endQuizSession() {
         breakdown.appendChild(row);
     });
     
-    // Save session
-    await saveSession({
-        examId: currentExam.id,
-        mode: 'quiz',
-        date: new Date().toISOString(),
-        score: percentage,
-        topicScores: topicScores,
-        questionCount: total
-    });
-    
     document.getElementById('quizSession').style.display = 'none';
     document.getElementById('quizSummary').style.display = 'block';
+
+    // Results must remain visible even if IndexedDB session persistence fails.
+    try {
+        await saveSession({
+            examId: currentExam.id,
+            mode: 'quiz',
+            date: new Date().toISOString(),
+            score: percentage,
+            topicScores: topicScores,
+            questionCount: total
+        });
+    } catch (err) {
+        console.error('Failed to save quiz session:', err);
+    }
 }
 
 async function saveSession(session) {
@@ -1220,6 +1282,7 @@ document.getElementById('endQuizBtn').addEventListener('click', () => {
     document.getElementById('quizScreen').style.display = 'none';
     document.getElementById('quizSetup').style.display = 'block';
     document.getElementById('quizSession').style.display = 'none';
+    document.getElementById('quizSummary').style.display = 'none';
     document.getElementById('modeScreen').style.display = 'block';
 });
 
