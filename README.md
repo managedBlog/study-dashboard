@@ -45,6 +45,16 @@ It produces content in the exact format this app consumes.
 
 Design intent: deterministic scripts do the structural checks/writes, while the model handles drafting and review judgments.
 
+### Validated source types
+
+This skill has been tested with the following source categories:
+
+- **YouTube-based study content** (video transcripts or transcript-derived notes)
+- **Microsoft Learn documentation** (module/unit pages and assessment-style content)
+- **PowerPoint decks (`.pptx`)** used for training or customer enablement
+
+It can also process plain text/markdown inputs and URLs that resolve to readable text content in your environment.
+
 ### Use it in Scout or CoWork
 
 If your Scout/CoWork environment has skills enabled:
