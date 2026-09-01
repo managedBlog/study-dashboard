@@ -666,7 +666,7 @@ The unit defines behavioral rules (behavior envelopes) as the explicit statement
 **Source:** Design overall AI strategy for business solutions — Define solution rules and constraints for AI components
 
 ### Q038 — Generative orchestration knowledge source limit
-*Bank: AB-620-LearnDocs · Domain: Plan and configure agent solutions (inferred) · Difficulty: Hard*
+*Bank: AB-620-LearnDocs · Domain: Plan and configure agent solutions · Difficulty: Hard*
 
 **In generative orchestration mode, how many knowledge sources can Copilot Studio search and filter with GPT-based relevance for a single agent response?**
 
@@ -683,7 +683,7 @@ This unit states generative orchestration can search and rank up to 25 knowledge
 **Source:** Design overall AI strategy for business solutions — Determine generative AI knowledge sources for agents built in Copilot Studio
 
 ### Q039 — Unstructured source concurrency limit vs. total object cap
-*Bank: AB-620-LearnDocs · Domain: Plan and configure agent solutions (inferred) · Difficulty: Hard*
+*Bank: AB-620-LearnDocs · Domain: Plan and configure agent solutions · Difficulty: Hard*
 
 **What is the maximum number of unstructured knowledge sources that can be used simultaneously in retrieval for a single agent, as distinct from the overall per-agent knowledge object cap?**
 
@@ -3293,7 +3293,7 @@ The common-issues table links unexpected responses to full conversation history 
 **Source:** Build cross-platform multi-agent solutions using the Agent2Agent protocol in Microsoft Copilot Studio — Test and validate an A2A agent connection
 
 ### Q187 — Choosing the safety tenet
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > An architect is reviewing an AI solution that must keep working under expected and unexpected conditions while avoiding unsafe outputs.
 
@@ -3312,7 +3312,7 @@ The unit says Reliability & Safety means AI must operate reliably in expected an
 **Source:** Design AI agents for business solutions — Define core tenets of responsible AI guidelines for AI business solutions
 
 ### Q188 — Explaining AI behavior
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 > Users ask how the system works, which data it relies on, and how its decisions are made.
 
@@ -3331,7 +3331,7 @@ Transparency is the tenet focused on helping users understand AI logic, data use
 **Source:** Design AI agents for business solutions — Define core tenets of responsible AI guidelines for AI business solutions
 
 ### Q189 — Fixing vague summaries
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > A customer service team says Copilot summaries are vague and use inconsistent internal language.
 
@@ -3350,7 +3350,7 @@ The unit ties accurate summaries to clearly defined business terms stored in Dat
 **Source:** Design AI agents for business solutions — Design business terms for Copilot in Dynamics 365 Customer Service
 
 ### Q190 — Selecting summary structure
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > A regulated service organization wants summary output with predefined sections such as Customer Issue, Actions Taken, Pending Items, Next Steps, and Resolution Status.
 
@@ -3369,7 +3369,7 @@ Structured Format breaks the summary into predefined sections and is described a
 **Source:** Design AI agents for business solutions — Design business terms for Copilot in Dynamics 365 Customer Service
 
 ### Q191 — Including a custom field
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 > Your organization tracks an Issue Type custom field and wants Copilot to reference it in case summaries.
 
@@ -3388,7 +3388,7 @@ The unit explicitly gives Issue Type as an example of a custom field that can be
 **Source:** Design AI agents for business solutions — Design business terms for Copilot in Dynamics 365 Customer Service
 
 ### Q192 — Reducing noise in Copilot outputs
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **Which customization practice does the unit say improves precision and reduces noise in Copilot outputs?**
 
@@ -3441,7 +3441,7 @@ The connector security section explicitly says to set Enable onbehalfoflogin = t
 **Source:** Design AI agents for business solutions — Design connectors for Copilot in Dynamics 365 Sales
 
 ### Q195 — Designing agent context scope
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > A contact center architect wants better grounding but also needs to reduce noise and meet privacy standards.
 
@@ -3460,7 +3460,7 @@ The unit says only the needed attributes should be included so accuracy improves
 **Source:** Design AI agents for business solutions — Design AI agents for Dynamics 365 Contact Center
 
 ### Q196 — Matching channel to AI integration
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 **Which channel and AI integration opportunity are paired correctly?**
 
@@ -3530,7 +3530,7 @@ The unit defines triggers as the events that cause the agent to start, including
 **Source:** Design AI agents for business solutions — Design autonomous agents in Copilot Studio
 
 ### Q200 — Fallback after no topic match
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 **If a Copilot Studio agent cannot match a topic, what does the unit say it can use as fallback to answer from available content?**
 
@@ -3547,7 +3547,7 @@ The unit states that when an agent cannot match a topic, it uses generative answ
 **Source:** Design AI agents for business solutions — Design prompt-driven agents using Copilot Studio
 
 ### Q201 — Choosing event triggers
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > A designer wants an agent to react when a file is uploaded or when a Dataverse row is added, without waiting for a user message.
 
@@ -3604,7 +3604,7 @@ For analyzing or transforming data, the unit recommends Azure Functions, ML mode
 **Source:** Design AI agents for business solutions — Propose Foundry tools given a requirement
 
 ### Q204 — Rapid page creation
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 > A maker wants to describe a requirement in natural language and have Power Apps create a page layout, data experiences, and UI structure.
 
@@ -3623,7 +3623,7 @@ The unit defines generative pages as the feature that turns a natural-language r
 **Source:** Design AI agents for business solutions — Propose code first generative pages and agent feed applications
 
 ### Q205 — Combining approaches
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Hard*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Hard*
 
 > A business app needs high-volume workflow automation, dynamic in-app recommendations, and developer control to extend or override generated UI.
 
@@ -3642,7 +3642,7 @@ The scenario lines up with the unit's table: high-volume workflow automation sho
 **Source:** Design AI agents for business solutions — Propose code first generative pages and agent feed applications
 
 ### Q206 — Designing fallback behavior
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 **When no known topic matches a user message, which fallback design best aligns with the unit?**
 
@@ -3659,7 +3659,7 @@ The fallback section lists those exact behaviors as characteristics of a well-de
 **Source:** Design AI agents for business solutions — Design topics for Copilot Studio, including fallback
 
 ### Q207 — Classifying topic types
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **In the topic type chart, which example best fits an Action Topic?**
 
@@ -3727,7 +3727,7 @@ The topology guidance says to use a single index for simplicity and split only w
 **Source:** Design AI agents for business solutions — Design data processing workflows for grounded AI
 
 ### Q211 — First step in AI-enabled process design
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **When designing a canvas-app business process with AI components, what comes first?**
 
@@ -3744,7 +3744,7 @@ The structured method starts with mapping the current workflow before identifyin
 **Source:** Design AI agents for business solutions — Design business processes with AI in Power Apps canvas apps
 
 ### Q212 — Security review for AI placement
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 **During the security and governance step, which question belongs in the review?**
 
@@ -3761,7 +3761,7 @@ Step 5 explicitly calls out both data access and permitted actions, along with D
 **Source:** Design AI agents for business solutions — Design business processes with AI in Power Apps canvas apps
 
 ### Q213 — Picking the security pillar
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **Which Power Platform Well-Architected pillar covers least-privilege access through Microsoft Entra ID, DLP policies, and secure connectors or API calls?**
 
@@ -3778,7 +3778,7 @@ Those examples are listed directly under the Security pillar.
 **Source:** Design AI agents for business solutions — Apply the Microsoft Power Platform Well-Architected Framework to intelligent application workloads
 
 ### Q214 — Scaling with Azure Functions
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 **Which pillar is most directly illustrated by offloading intensive tasks to Azure Functions and right-sizing flows and action concurrency?**
 
@@ -3795,7 +3795,7 @@ Both examples appear under Performance efficiency, which focuses on responsive a
 **Source:** Design AI agents for business solutions — Apply the Microsoft Power Platform Well-Architected Framework to intelligent application workloads
 
 ### Q215 — Optimizing user outcomes
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **Which pillar emphasizes UX consistency across Power Apps, Copilot-assisted workflows for ease of use, and accessibility compliance?**
 
@@ -3812,7 +3812,7 @@ The Experience optimization pillar is about meaningful user experiences and incl
 **Source:** Design AI agents for business solutions — Apply the Microsoft Power Platform Well-Architected Framework to intelligent application workloads
 
 ### Q216 — Best fit for regulated commands
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > A conversational solution handles fixed phrases such as 'Reset password' and requires safe, consistent routing based on exact intents.
 
@@ -3831,7 +3831,7 @@ The unit says standard NLU is best for predictable tasks with high precision and
 **Source:** Design AI agents for business solutions — Determine the use of standard natural language processing
 
 ### Q217 — Best fit for open-ended grounded work
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > Users ask unstructured questions, and the agent must use enterprise data for reasoning, summarization, and multi-turn dialog.
 
@@ -3922,7 +3922,7 @@ The unit says output can be controlled with constraints like word limits, requir
 **Source:** Design AI agents for business solutions — Design prompt actions in Copilot Studio
 
 ### Q222 — Recognizing a quality metric
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **Which example belongs to the Quality & Accuracy success criteria category?**
 
@@ -3939,7 +3939,7 @@ The success-criteria table lists AI recommendation accuracy ≥ 85% as the examp
 **Source:** Design AI agents for business solutions — Define success criteria and adoption goals for AI business solutions
 
 ### Q223 — Naming the planning activity
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > Before scaling an AI solution, a team evaluates data quality, security requirements, skill readiness, and model appropriateness.
 
@@ -4176,7 +4176,7 @@ The unit says that when UI elements may change, agents should use descriptive in
 **Source:** Design extensibility of AI solutions — Design agents to automate tasks in apps and websites with Computer Use in Copilot Studio
 
 ### Q236 — Enabling deep reasoning
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Hard*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Hard*
 
 > An agent must evaluate constraints and trade-offs across a multi-step business process before making a recommendation.
 
@@ -4214,7 +4214,7 @@ The unit says that when an agent is installed on a SharePoint site, it knows whi
 **Source:** Design extensibility of AI solutions — Optimize solution design for agents in Microsoft 365
 
 ### Q238 — Automating the case lifecycle
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **Which autonomous service agent is described as automating the create, update, resolve, and close processes of cases?**
 
@@ -4231,7 +4231,7 @@ The unit explicitly says the Case Management Agent automates the case life cycle
 **Source:** Orchestrate configuration of prebuilt agents and apps — Design AI solutions for Dynamics 365 Customer Service
 
 ### Q239 — Cross-system service orchestration
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > A service solution must coordinate Customer Service with billing or refund work in Finance and escalation flows in Power Automate.
 
@@ -4250,7 +4250,7 @@ The unit places Customer Service plus Finance for billing or refunds and Custome
 **Source:** Orchestrate configuration of prebuilt agents and apps — Design AI solutions for Dynamics 365 Customer Service
 
 ### Q240 — Change control in readiness review
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **In the Microsoft 365 agent readiness checklist, which area explicitly includes versioning, rollout rings, rollback, and sunset criteria?**
 
@@ -4267,7 +4267,7 @@ The readiness checklist bullet for change control names versioning, rollout ring
 **Source:** Orchestrate configuration of prebuilt agents and apps — Propose Microsoft 365 agents for business scenarios
 
 ### Q241 — Starting with the business outcome
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **In the five-step agent design framework, which step tells architects to describe the recurring outcome the business needs rather than the tool steps?**
 
@@ -4284,7 +4284,7 @@ The framework's first step is to frame the job to be done, and it specifically s
 **Source:** Orchestrate configuration of prebuilt agents and apps — Propose Microsoft 365 agents for business scenarios
 
 ### Q242 — Selecting the portfolio-risk pilot
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > Leaders want AI that consolidates project portfolio information to highlight risks, blockers, dependencies, and resource pressures.
 
@@ -4303,7 +4303,7 @@ The Portfolio Risk Insights Analyzer is the catalog item described as providing 
 **Source:** Orchestrate configuration of prebuilt agents and apps — Propose Microsoft 365 agents for business scenarios
 
 ### Q243 — Accountable owner for connector setup
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 **According to the baseline RACI chart, who is accountable for tool or connector setup?**
 
@@ -4320,7 +4320,7 @@ In the RACI row for tool or connector setup, Support/ops is marked A for account
 **Source:** Orchestrate configuration of prebuilt agents and apps — Propose Microsoft 365 agents for business scenarios
 
 ### Q244 — Improving grounding consistency in sales
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > A sales rollout finds Copilot responses are inconsistent because CRM context is not aligned across opportunity, account, and activity information.
 
@@ -4339,7 +4339,7 @@ The sales configuration workflow says to map opportunity, account, and activity 
 **Source:** Orchestrate configuration of prebuilt agents and apps — Orchestrate and configure Microsoft 365 Copilot for sales and service
 
 ### Q245 — Automating service escalations
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > A service team wants Copilot to trigger escalations, case routing, and approvals after summarization and knowledge lookup.
 
@@ -4358,7 +4358,7 @@ The service configuration workflow explicitly says to integrate Power Automate f
 **Source:** Orchestrate configuration of prebuilt agents and apps — Orchestrate and configure Microsoft 365 Copilot for sales and service
 
 ### Q246 — Purpose of the AI hub
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Easy*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Easy*
 
 **Which Power Platform capability is described as the central or unified workspace for managing, discovering, and orchestrating AI across models, connectors, and copilots?**
 
@@ -4449,7 +4449,7 @@ The unit says to restrict general knowledge when precision is critical for regul
 **Source:** Orchestrate configuration of prebuilt agents and apps — Recommend process knowledge sources for in-app help in Dynamics 365
 
 ### Q251 — Governed external data access
-*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio (inferred) · Difficulty: Medium*
+*Bank: AB-620-LearnDocs · Domain: Integrate and extend agents in Copilot Studio · Difficulty: Medium*
 
 > You are designing external agents that work beyond the Finance and Supply Chain UI and need consistent, governed access to data.
 
