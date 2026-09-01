@@ -522,7 +522,7 @@ function parseBank3Questions(content) {
 
 function parseUnifiedQuestions(content) {
     const questions = [];
-    const lines = content.replace(/\r\n/g, '\n').split('\n');
+    const lines = content.split('\n');
 
     const qRegex = /^###\s+Q(\d+)\s+—\s+(.+)$/;
     const metadataRegex = /^\*Bank:\s*([^·*]+?)\s*·\s*Domain:\s*([^·*]+?)\s*·\s*Difficulty:\s*([^*]+)\*$/;
@@ -533,11 +533,6 @@ function parseUnifiedQuestions(content) {
 
     let current = null;
     let inOptions = false;
-    const appendExplanationLine = (lineText) => {
-        const text = lineText.trim();
-        if (!text) return;
-        current.explanation += (current.explanation ? '\n' : '') + text;
-    };
 
     const pushCurrent = () => {
         if (!current) return;
@@ -571,8 +566,7 @@ function parseUnifiedQuestions(content) {
         const metadataMatch = line.match(metadataRegex);
         if (metadataMatch && !current.topic) {
             current.bank = metadataMatch[1].trim();
-            const parsedTopic = metadataMatch[2].trim();
-            current.topic = parsedTopic === '(none)' ? '' : parsedTopic;
+            current.topic = metadataMatch[2].trim();
             current.difficulty = metadataMatch[3].trim();
             continue;
         }
@@ -623,9 +617,9 @@ function parseUnifiedQuestions(content) {
             }
         } else if (line.trim()) {
             if (line.startsWith('> ')) {
-                appendExplanationLine(line.substring(2));
-            } else {
-                appendExplanationLine(line);
+                current.explanation += (current.explanation ? ' ' : '') + line.substring(2).trim();
+            } else if (!line.startsWith('#') && !line.startsWith('*') && !line.startsWith('-')) {
+                current.explanation += (current.explanation ? ' ' : '') + line.trim();
             }
         }
     }
@@ -724,7 +718,7 @@ async function loadFilesFromInput(files) {
         title: metadata.examTitle,
         metadata
     };
-
+    
     const tx = db.transaction(
         [STORE_NAMES.exams, STORE_NAMES.flashcards, STORE_NAMES.questions],
         'readwrite'
@@ -794,32 +788,6 @@ async function loadFilesFromInput(files) {
     return { exam, flashcardCount: flashcards.length, questionCount: questions.length };
 }
 
-async function getStoredItemsForExam(storeName, examId) {
-    return new Promise((resolve, reject) => {
-        const request = db.transaction([storeName]).objectStore(storeName).getAll();
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-            resolve(request.result.filter((item) => item.examId === examId));
-        };
-    });
-}
-
-function configureCountInput(inputId, availableCount) {
-    const input = document.getElementById(inputId);
-    const requested = parseInt(input.value, 10);
-    input.max = String(availableCount);
-    input.value = String(Math.min(
-        Number.isFinite(requested) && requested > 0 ? requested : availableCount,
-        availableCount
-    ));
-}
-
-function getRequestedCount(inputId, availableCount) {
-    const requested = parseInt(document.getElementById(inputId).value, 10);
-    if (!Number.isFinite(requested) || requested < 1) return availableCount;
-    return Math.min(requested, availableCount);
-}
-
 // ============================================================================
 // FAIR RANDOM CYCLING ALGORITHM
 // ============================================================================
@@ -884,6 +852,46 @@ function shuffleArray(arr) {
     return shuffled;
 }
 
+function getPrimaryTopic(question) {
+    if (Array.isArray(question?.topics) && question.topics.length > 0 && question.topics[0]) {
+        return String(question.topics[0]).trim();
+    }
+    return 'General';
+}
+
+async function populateQuizTopicFilter() {
+    const topicSelect = document.getElementById('quizTopicFilter');
+    if (!topicSelect) return;
+
+    topicSelect.innerHTML = '';
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = 'All topics';
+    topicSelect.appendChild(allOption);
+
+    if (!currentExam?.id) return;
+
+    const allQuestions = await new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_NAMES.questions]);
+        const request = tx.objectStore(STORE_NAMES.questions).getAll();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+    });
+
+    const topics = [...new Set(allQuestions
+        .filter((q) => q.examId === currentExam.id)
+        .map((q) => getPrimaryTopic(q))
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
+
+    topics.forEach((topic) => {
+        const option = document.createElement('option');
+        option.value = topic;
+        option.textContent = topic;
+        topicSelect.appendChild(option);
+    });
+}
+
 // ============================================================================
 // UI HANDLERS
 // ============================================================================
@@ -895,6 +903,9 @@ document.getElementById('loadFileBtn').addEventListener('click', () => {
 document.getElementById('fileInput').addEventListener('change', async (e) => {
     try {
         const { exam, flashcardCount, questionCount } = await loadFilesFromInput(e.target.files);
+        await populateQuizTopicFilter();
+        await updateFlashcardCountHint();
+        await updateQuizCountHint();
         
         // Show status (actual parsed counts, not the static metadata.json numbers)
         const info = document.getElementById('contentInfo');
@@ -906,8 +917,6 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
         
         document.getElementById('fileStatus').style.display = 'block';
         document.getElementById('modeButtons').style.display = 'flex';
-        configureCountInput('flashcardCount', flashcardCount);
-        configureCountInput('quizCount', questionCount);
         
         e.target.value = ''; // Reset input
     } catch (err) {
@@ -918,24 +927,84 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
 document.getElementById('flashcardModeBtn').addEventListener('click', () => {
     document.getElementById('modeScreen').style.display = 'none';
     document.getElementById('flashcardScreen').style.display = 'block';
-    document.getElementById('flashcardSetup').style.display = 'block';
-    document.getElementById('flashcardSession').style.display = 'none';
-    document.getElementById('flashcardSummary').style.display = 'none';
+    updateFlashcardCountHint().catch((err) => {
+        console.warn('Could not update flashcard count hint:', err);
+    });
 });
 
 document.getElementById('quizModeBtn').addEventListener('click', () => {
     document.getElementById('modeScreen').style.display = 'none';
     document.getElementById('quizScreen').style.display = 'block';
-    document.getElementById('quizSetup').style.display = 'block';
-    document.getElementById('quizSession').style.display = 'none';
-    document.getElementById('quizSummary').style.display = 'none';
+    populateQuizTopicFilter().then(updateQuizCountHint).catch((err) => {
+        console.warn('Could not populate topic filter:', err);
+    });
 });
+
+document.getElementById('quizDifficultyFilter').addEventListener('change', () => {
+    updateQuizCountHint().catch((err) => console.warn('Could not update quiz count hint:', err));
+});
+
+document.getElementById('quizTopicFilter').addEventListener('change', () => {
+    updateQuizCountHint().catch((err) => console.warn('Could not update quiz count hint:', err));
+});
+
+async function getAllFlashcardsForExam() {
+    if (!currentExam?.id) return [];
+    const allCards = await new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_NAMES.flashcards]);
+        const request = tx.objectStore(STORE_NAMES.flashcards).getAll();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+    });
+    return allCards.filter((c) => c.examId === currentExam.id);
+}
+
+async function updateFlashcardCountHint() {
+    const input = document.getElementById('flashcardCount');
+    const hint = document.getElementById('flashcardCountHint');
+    if (!input || !hint) return;
+
+    const cards = await getAllFlashcardsForExam();
+    const total = cards.length;
+    input.max = total > 0 ? String(total) : '';
+    hint.textContent = total > 0 ? `${total} card(s) available.` : 'Load exam files to see available cards.';
+    if (total > 0 && parseInt(input.value, 10) > total) input.value = String(total);
+}
+
+async function getAllQuestionsForExam() {
+    if (!currentExam?.id) return [];
+    const allQuestions = await new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_NAMES.questions]);
+        const request = tx.objectStore(STORE_NAMES.questions).getAll();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+    });
+    return allQuestions.filter((q) => q.examId === currentExam.id);
+}
+
+async function updateQuizCountHint() {
+    const input = document.getElementById('quizCount');
+    const hint = document.getElementById('quizCountHint');
+    if (!input || !hint) return;
+
+    const difficultyFilter = document.getElementById('quizDifficultyFilter').value;
+    const topicFilter = document.getElementById('quizTopicFilter').value;
+    const questions = await getAllQuestionsForExam();
+    const total = questions.filter((q) => {
+        if (difficultyFilter !== 'all' && (q.difficulty || 'Unknown') !== difficultyFilter) return false;
+        if (topicFilter !== 'all' && getPrimaryTopic(q) !== topicFilter) return false;
+        return true;
+    }).length;
+
+    input.max = total > 0 ? String(total) : '';
+    hint.textContent = total > 0 ? `${total} question(s) match the current filters.` : 'Load exam files to see available questions.';
+    if (total > 0 && parseInt(input.value, 10) > total) input.value = String(total);
+}
 
 document.getElementById('backFromFlashcard').addEventListener('click', () => {
     document.getElementById('flashcardScreen').style.display = 'none';
     document.getElementById('flashcardSetup').style.display = 'block';
     document.getElementById('flashcardSession').style.display = 'none';
-    document.getElementById('flashcardSummary').style.display = 'none';
     document.getElementById('modeScreen').style.display = 'block';
 });
 
@@ -943,7 +1012,6 @@ document.getElementById('backFromQuiz').addEventListener('click', () => {
     document.getElementById('quizScreen').style.display = 'none';
     document.getElementById('quizSetup').style.display = 'block';
     document.getElementById('quizSession').style.display = 'none';
-    document.getElementById('quizSummary').style.display = 'none';
     document.getElementById('modeScreen').style.display = 'block';
 });
 
@@ -952,14 +1020,21 @@ document.getElementById('backFromQuiz').addEventListener('click', () => {
 // ============================================================================
 
 document.getElementById('startFlashcardBtn').addEventListener('click', async () => {
-    const allCards = await getStoredItemsForExam(STORE_NAMES.flashcards, currentExam.id);
+    // Get all flashcard IDs
+    const allCards = await new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_NAMES.flashcards]);
+        const request = tx.objectStore(STORE_NAMES.flashcards)
+            .getAll();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+    });
     
     if (allCards.length === 0) {
         alert('No flashcards are loaded. Please use "Load Exam Files" first.');
         return;
     }
 
-    const count = getRequestedCount('flashcardCount', allCards.length);
+    const count = Math.max(1, Math.min(allCards.length, parseInt(document.getElementById('flashcardCount').value, 10) || allCards.length));
     
     const cardIds = allCards.map(c => c.id);
     const selectedIds = await selectRandomItems(currentExam.id, 'flashcard', count, cardIds);
@@ -997,7 +1072,6 @@ function startFlashcardSession(cards) {
     
     document.getElementById('flashcardSetup').style.display = 'none';
     document.getElementById('flashcardSession').style.display = 'block';
-    document.getElementById('flashcardSummary').style.display = 'none';
     
     showFlashcard();
 }
@@ -1071,7 +1145,6 @@ document.getElementById('endFlashcardBtn').addEventListener('click', () => {
     document.getElementById('flashcardScreen').style.display = 'none';
     document.getElementById('flashcardSetup').style.display = 'block';
     document.getElementById('flashcardSession').style.display = 'none';
-    document.getElementById('flashcardSummary').style.display = 'none';
     document.getElementById('modeScreen').style.display = 'block';
 });
 
@@ -1080,52 +1153,68 @@ document.getElementById('endFlashcardBtn').addEventListener('click', () => {
 // ============================================================================
 
 document.getElementById('startQuizBtn').addEventListener('click', async () => {
-    const allQuestions = await getStoredItemsForExam(STORE_NAMES.questions, currentExam.id);
+    const requestedCount = Math.max(1, parseInt(document.getElementById('quizCount').value, 10) || 30);
+    const difficultyFilter = document.getElementById('quizDifficultyFilter').value;
+    const topicFilter = document.getElementById('quizTopicFilter').value;
+    const shuffleOptions = document.getElementById('quizShuffleOptions').checked;
     
-    if (allQuestions.length === 0) {
+    // Get all question IDs
+    const allQuestions = await new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_NAMES.questions]);
+        const request = tx.objectStore(STORE_NAMES.questions)
+            .getAll();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+    });
+    
+    const examQuestions = allQuestions.filter((q) => q.examId === currentExam.id);
+    if (examQuestions.length === 0) {
         alert('No questions are loaded. Please use "Load Exam Files" first.');
         return;
     }
 
-    const count = getRequestedCount('quizCount', allQuestions.length);
-    
-    const questionIds = allQuestions.map(q => q.id);
-    const selectedIds = await selectRandomItems(currentExam.id, 'quiz', count, questionIds);
-    
-    // Load selected questions (guard against an empty selection hanging this promise forever)
-    const selectedQuestions = selectedIds.length === 0 ? [] : await new Promise((resolve, reject) => {
-        const tx = db.transaction([STORE_NAMES.questions]);
-        const store = tx.objectStore(STORE_NAMES.questions);
-        const results = [];
-        const remaining = selectedIds.length;
-        let completed = 0;
-        
-        selectedIds.forEach(id => {
-            const req = store.get(id);
-            req.onerror = () => reject(req.error);
-            req.onsuccess = () => {
-                results.push(req.result);
-                completed++;
-                if (completed === remaining) resolve(results);
-            };
-        });
+    const filteredQuestions = examQuestions.filter((q) => {
+        if (difficultyFilter !== 'all' && (q.difficulty || 'Unknown') !== difficultyFilter) return false;
+        if (topicFilter !== 'all' && getPrimaryTopic(q) !== topicFilter) return false;
+        return true;
     });
-    
-    startQuizSession(selectedQuestions);
+
+    if (filteredQuestions.length === 0) {
+        alert('No questions match the selected quiz options. Try a different filter.');
+        return;
+    }
+
+    const count = Math.min(requestedCount, filteredQuestions.length);
+    if (count < requestedCount) {
+        alert(`Only ${count} question(s) match the selected quiz options. Starting with ${count}.`);
+    }
+
+    const questionIds = filteredQuestions.map((q) => q.id);
+    const trackerMode = `quiz:${difficultyFilter}:${topicFilter}`;
+    const selectedIds = await selectRandomItems(currentExam.id, trackerMode, count, questionIds);
+    const questionById = new Map(filteredQuestions.map((q) => [q.id, q]));
+    const selectedQuestions = selectedIds.map((id) => questionById.get(id)).filter(Boolean);
+
+    startQuizSession(selectedQuestions, {
+        requestedCount,
+        shuffleOptions,
+        difficultyFilter,
+        topicFilter
+    });
 });
 
-function startQuizSession(questions) {
+function startQuizSession(questions, runtimeOptions = {}) {
     currentSession = {
         mode: 'quiz',
         questions: questions,
         current: 0,
         answers: {},
-        score: 0
+        score: 0,
+        runtimeOptions
     };
     
     document.getElementById('quizSetup').style.display = 'none';
     document.getElementById('quizSession').style.display = 'block';
-    document.getElementById('quizSummary').style.display = 'none';
     
     showQuestion();
 }
@@ -1146,7 +1235,11 @@ function showQuestion() {
     const container = document.getElementById('optionsContainer');
     container.innerHTML = '';
     
-    q.options.forEach((opt) => {
+    const optionsForRender = currentSession.runtimeOptions?.shuffleOptions
+        ? shuffleArray(q.options || [])
+        : (q.options || []);
+
+    optionsForRender.forEach((opt) => {
         const label = document.createElement('label');
         label.className = 'option';
         label.innerHTML = `
@@ -1229,7 +1322,7 @@ async function endQuizSession() {
     // Topic breakdown
     const topicScores = {};
     currentSession.questions.forEach((q) => {
-        const topic = (q.topics && q.topics[0]) || 'General';
+        const topic = getPrimaryTopic(q);
         if (!topicScores[topic]) topicScores[topic] = { correct: 0, total: 0 };
         topicScores[topic].total++;
         if (currentSession.answers[q.id] === q.answer) {
@@ -1261,7 +1354,9 @@ async function endQuizSession() {
             date: new Date().toISOString(),
             score: percentage,
             topicScores: topicScores,
-            questionCount: total
+            questionCount: total,
+            requestedCount: currentSession.runtimeOptions?.requestedCount || total,
+            runtimeOptions: currentSession.runtimeOptions || {}
         });
     } catch (err) {
         console.error('Failed to save quiz session:', err);
@@ -1282,7 +1377,6 @@ document.getElementById('endQuizBtn').addEventListener('click', () => {
     document.getElementById('quizScreen').style.display = 'none';
     document.getElementById('quizSetup').style.display = 'block';
     document.getElementById('quizSession').style.display = 'none';
-    document.getElementById('quizSummary').style.display = 'none';
     document.getElementById('modeScreen').style.display = 'block';
 });
 

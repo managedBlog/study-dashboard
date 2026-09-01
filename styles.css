@@ -170,6 +170,54 @@ h3 {
     align-items: center;
 }
 
+.setup-options {
+    margin-top: 14px;
+    display: grid;
+    gap: 10px;
+}
+
+.option-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.92em;
+    font-weight: 600;
+    color: #4a4a4a;
+}
+
+.option-field select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e7ff;
+    border-radius: 6px;
+    font-size: 0.95em;
+    background: #fff;
+    color: #333;
+}
+
+.option-field select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.checkbox-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #444;
+}
+
+.checkbox-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+.setup-note {
+    margin-top: 10px;
+    color: #666;
+    font-size: 0.85em;
+}
+
 input[type="number"] {
     flex: 1;
     padding: 10px;
@@ -389,8 +437,6 @@ input[type="number"]:focus {
 .feedback-explanation {
     color: #333;
     line-height: 1.7;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
 }
 
 .feedback-explanation a {

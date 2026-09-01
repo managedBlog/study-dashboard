@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
     <title>Study Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
     <div id="app">
@@ -45,11 +45,12 @@
                 <h2>Flashcard Mode</h2>
                 
                 <div class="setup-panel" id="flashcardSetup">
-                    <label>Number of cards:</label>
+                    <label for="flashcardCount">Number of cards:</label>
                     <div class="input-row">
                         <input type="number" id="flashcardCount" min="1" value="20">
                         <button id="startFlashcardBtn" class="btn btn-primary">Start</button>
                     </div>
+                    <p class="setup-note" id="flashcardCountHint"></p>
                 </div>
                 
                 <div id="flashcardSession" style="display: none;">
@@ -72,12 +73,11 @@
                     </div>
                     <div class="flashcard-link-panel" id="flashcardLinks" style="display: none;"></div>
                     
-                </div>
-
-                <div class="session-summary" id="flashcardSummary" style="display: none;">
-                    <h3>Session Complete!</h3>
-                    <p>You reviewed <span id="cardsReviewed">0</span> cards</p>
-                    <button id="endFlashcardBtn" class="btn btn-primary">Back to Menu</button>
+                    <div class="session-summary" id="flashcardSummary" style="display: none;">
+                        <h3>Session Complete!</h3>
+                        <p>You reviewed <span id="cardsReviewed">0</span> cards</p>
+                        <button id="endFlashcardBtn" class="btn btn-primary">Back to Menu</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -90,11 +90,35 @@
                 <h2>Quiz Mode</h2>
                 
                 <div class="setup-panel" id="quizSetup">
-                    <label>Number of questions:</label>
+                    <label for="quizCount">Number of questions:</label>
                     <div class="input-row">
                         <input type="number" id="quizCount" min="1" value="30">
                         <button id="startQuizBtn" class="btn btn-primary">Start Quiz</button>
                     </div>
+                    <div class="setup-options">
+                        <div class="option-field">
+                            <label for="quizDifficultyFilter">Difficulty</label>
+                            <select id="quizDifficultyFilter">
+                                <option value="all">All difficulties</option>
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <div class="option-field">
+                            <label for="quizTopicFilter">Topic</label>
+                            <select id="quizTopicFilter">
+                                <option value="all">All topics</option>
+                            </select>
+                        </div>
+                        <label class="checkbox-option" for="quizShuffleOptions">
+                            <input type="checkbox" id="quizShuffleOptions">
+                            Shuffle answer choices for this session
+                        </label>
+                    </div>
+                    <p class="setup-note" id="quizCountHint"></p>
+                    <p class="setup-note">These options apply only to the current quiz session.</p>
                 </div>
                 
                 <div id="quizSession" style="display: none;">
@@ -122,16 +146,15 @@
                         <button id="submitAnswerBtn" class="btn btn-primary" disabled>Submit Answer</button>
                     </div>
                     
-                </div>
-
-                <div class="quiz-summary" id="quizSummary" style="display: none;">
-                    <h3>Quiz Complete!</h3>
-                    <div class="score-display">
-                        <p class="score-number" id="scoreNumber">0%</p>
-                        <p class="score-label">Correct</p>
+                    <div class="quiz-summary" id="quizSummary" style="display: none;">
+                        <h3>Quiz Complete!</h3>
+                        <div class="score-display">
+                            <p class="score-number" id="scoreNumber">0%</p>
+                            <p class="score-label">Correct</p>
+                        </div>
+                        <div id="topicBreakdown"></div>
+                        <button id="endQuizBtn" class="btn btn-primary">Back to Menu</button>
                     </div>
-                    <div id="topicBreakdown"></div>
-                    <button id="endQuizBtn" class="btn btn-primary">Back to Menu</button>
                 </div>
             </div>
         </div>
