@@ -24,16 +24,6 @@ This repo now includes the deployable app, editable source/build copies, content
 - Requested count can be any value from `1` to available items
 - All data stored locally in browser IndexedDB
 
-## Run locally
-
-No build tooling is required.
-
-1. Clone the repo.
-2. Open `index.html` in a browser, or run a static server from repo root:
-   - Python: `python -m http.server 8000`
-   - Node: `npx serve .`
-3. Load an exam pack (one `metadata.json`, one `*-ALL-FLASHCARDS.md`, one `*-ALL-QUESTIONS.md`).
-
 ## Skill included in this repo
 
 The generation skill is included at:
@@ -41,9 +31,55 @@ The generation skill is included at:
 - `skills/generate-study-content/SKILL.md`
 - `skills/generate-study-content/scripts/*`
 
-It produces content in the exact format this app consumes. See the skill's `SKILL.md` for workflow details and deterministic helper scripts.
+It produces content in the exact format this app consumes.
+
+### How the skill works
+
+`generate-study-content` is a guarded generation pipeline:
+
+1. Ingest source material (local files, URLs, or pasted content) and chunk by structure.
+2. Draft questions and/or flashcards at requested depth and size.
+3. Run deterministic duplicate checks (`dedup-check.js`).
+4. Run an adversarial factual review gate before writing.
+5. Assign IDs, validate schema, and write via `write-bank.js`.
+
+Design intent: deterministic scripts do the structural checks/writes, while the model handles drafting and review judgments.
+
+### Use it in Scout or CoWork
+
+If your Scout/CoWork environment has skills enabled:
+
+1. Open chat in the environment.
+2. Invoke the skill with `/generate-study-content`.
+3. Provide source(s), desired size/depth, and whether output should be questions, flashcards, or both.
+4. Review the pre-write summary and approve write.
+
+Example request:
+
+`/generate-study-content make 30 certification-level quiz questions from this Learn module URL and append to AB-620 Unified Template`
+
+### Run the skill locally (script path)
+
+From repo root:
+
+1. `cd skills\generate-study-content\scripts`
+2. `node check-source.js --path <source-file>`
+3. `node chunk-source.js --path <source-file>`
+4. Continue with `dedup-check.js`, `assign-ids.js`, `validate-items.js`, and `write-bank.js` per `skills/generate-study-content/SKILL.md`.
+
+The scripts are plain Node.js with no package install step.
 
 ## Deploy/publish
+
+### Run locally (solution-agnostic)
+
+This is a static web app. Any method that serves the repo root as static files works:
+
+- Open `index.html` directly in a browser.
+- Use any local static server (VS Code Live Server, Python `http.server`, `npx serve`, IIS/nginx/Caddy, etc.).
+- Use a hosted static URL from any provider.
+
+Load an exam pack after launch (one `metadata.json`, one `*-ALL-FLASHCARDS.md`, one `*-ALL-QUESTIONS.md`).
 
 ### GitHub Pages
 

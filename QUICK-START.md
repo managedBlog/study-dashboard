@@ -106,12 +106,13 @@ Each question is:
 
 ---
 
-## Step 2: Open the Study Dashboard
+## Step 2: Run the app (solution-agnostic)
 
 Use one of these options:
 
-1. **Local:** Open `index.html` directly, or run a static server from repo root (`python -m http.server 8000`).
-2. **Published:** Use the URL shown in **GitHub -> Settings -> Pages** for this repo.
+1. **Local file:** Open `index.html` directly in a browser.
+2. **Local static server:** Serve repo root with any tool (VS Code Live Server, Python `http.server`, `npx serve`, IIS/nginx/Caddy, etc.).
+3. **Published URL:** Use any static-hosted URL (GitHub Pages or another static host).
 
 On mobile, you can bookmark the published URL to your home screen for quick access.
 
@@ -156,6 +157,32 @@ Your progress is saved automatically in your browser. You can:
 - **Across sessions:** The app remembers which items you've seen, so you eventually review everything (not just repeating the same questions)
 - **On the same device:** All progress stays local to that device
 - **Export progress** (coming in a future update): Manual backup for cloud storage
+
+---
+
+## Step 6: Generate new content with the included skill (optional)
+
+This repo includes `skills/generate-study-content/`, which can draft and validate new flashcards/questions in the same format this app expects.
+
+### In Scout or CoWork
+
+If skills are enabled in your environment:
+
+1. Start chat and run `/generate-study-content`.
+2. Provide your source material (file path, URL, or pasted text).
+3. Choose output type (`questions`, `flashcards`, or `both`) plus size/depth.
+4. Review the pre-write summary and approve write.
+
+Example:
+
+`/generate-study-content create 20 medium-difficulty quiz questions from this training deck and append to AB-620 Unified Template`
+
+### Local script path
+
+From repo root:
+
+1. `cd skills\generate-study-content\scripts`
+2. Run the helper scripts described in `..\SKILL.md` (`check-source.js`, `chunk-source.js`, `dedup-check.js`, `assign-ids.js`, `validate-items.js`, `write-bank.js`).
 
 ---
 
