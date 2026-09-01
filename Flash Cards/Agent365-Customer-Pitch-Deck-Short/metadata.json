@@ -1,0 +1,34 @@
+{
+  "examCode": "A365-PITCH",
+  "examTitle": "Microsoft Agent 365 Customer Pitch Deck (Short)",
+  "description": "Generated from deck source with medium size and intermediate depth",
+  "totalFlashcards": 12,
+  "totalQuestions": 12,
+  "topics": [],
+  "difficulties": [
+    "Easy",
+    "Medium",
+    "Hard",
+    "Unknown"
+  ],
+  "banks": [
+    {
+      "id": "bank1",
+      "name": "Deck-Derived Medium Set",
+      "sourceType": "powerpoint-deck",
+      "generationMethod": "LLM-generated from PPTX text extraction with adversarial review",
+      "defaultSource": {
+        "type": "powerpoint",
+        "note": "Microsoft Agent 365 Customer Pitch Deck (Short) (1).PPTX"
+      },
+      "questionCount": 12
+    }
+  ],
+  "contentPack": {
+    "format": "markdown",
+    "flashcardsFile": "ALL-FLASHCARDS.md",
+    "questionsFile": "ALL-QUESTIONS.md"
+  },
+  "lastUpdated": "2026-08-31T18:10:54.056Z",
+  "version": "1.0"
+}

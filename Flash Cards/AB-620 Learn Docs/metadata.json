@@ -1,0 +1,50 @@
+{
+  "examCode": "AB-620",
+  "examTitle": "AI Agent Builder Associate",
+  "description": "Certification-level study pack for AB-620 (AI Agent Builder Associate), sourced from Microsoft Learn Docs learning paths and modules, including official module assessments cited as such. Covers Plan and configure agent solutions, Integrate and extend agents in Copilot Studio, and Test and manage agents.",
+  "totalFlashcards": 503,
+  "totalQuestions": 510,
+  "topics": [
+    {
+      "code": "PLAN",
+      "name": "Plan and configure agent solutions",
+      "source": "Microsoft Learn AB-620 Learning Paths"
+    },
+    {
+      "code": "INTEGRATE",
+      "name": "Integrate and extend agents in Copilot Studio",
+      "source": "Microsoft Learn AB-620 Learning Paths"
+    },
+    {
+      "code": "TEST",
+      "name": "Test and manage agents",
+      "source": "Microsoft Learn AB-620 Learning Paths"
+    }
+  ],
+  "difficulties": [
+    "Easy",
+    "Medium",
+    "Hard",
+    "Unknown"
+  ],
+  "banks": [
+    {
+      "id": "bank1",
+      "name": "AB-620 Learn Docs",
+      "sourceType": "microsoft-learn",
+      "generationMethod": "LLM-drafted from crawled Microsoft Learn module content, with module-assessment-sourced items explicitly cited as such; adversarially reviewed in a separate context per batch",
+      "defaultSource": {
+        "type": "microsoft-learn",
+        "note": "learningPath/module/unit/unitUrl cited per item"
+      },
+      "questionCount": 510
+    }
+  ],
+  "contentPack": {
+    "format": "markdown",
+    "flashcardsFile": "ALL-FLASHCARDS.md",
+    "questionsFile": "ALL-QUESTIONS.md"
+  },
+  "lastUpdated": "2026-09-01T15:48:30.264Z",
+  "version": "1.0"
+}
