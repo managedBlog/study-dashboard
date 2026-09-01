@@ -1,149 +1,74 @@
 # Study Dashboard
 
-A personal, zero-cost study app for exam preparation. Load your exam content (flashcards and practice questions) from your device and study from any browser, including mobile.
+Browser-based study app for flashcards + quizzes, with local IndexedDB storage and deterministic cycling so sessions eventually cover the full bank.
 
-## Features
+## What's in this repository
 
-- **Flashcard Mode:** Review random flashcard selections (10-50 cards per session)
-- **Quiz Mode:** Take timed practice quizzes (20-50 questions per session) with per-topic scoring
-- **Fair Cycling:** All content eventually gets reviewed across sessions (not just the first 20%)
-- **Per-Device Storage:** Progress stored locally in your browser (IndexedDB)
-- **Zero Cost:** No server, no login, no hosting fees
-- **Mobile Friendly:** Works on iPhone, iPad, and all modern browsers
+This repo now includes the deployable app, editable source/build copies, content packs, and the content-generation skill:
 
-## How to Use
+| Path | Purpose |
+|---|---|
+| `index.html`, `app.js`, `styles.css` | Live deploy surface (what GitHub Pages serves from repo root). |
+| `app-src/` | Primary editable source copy for ongoing development. |
+| `app-build/` | Staging/build copy used when preparing deployment updates. |
+| `Flash Cards/` | Exam content packs (`metadata.json`, `*-ALL-FLASHCARDS.md`, `*-ALL-QUESTIONS.md`). |
+| `skills/generate-study-content/` | Copilot skill to generate/append study content in the app's required format. |
+| `QUICK-START.md` | Detailed end-user content formatting and usage walkthrough. |
 
-### 1. Get Your Exam Content
+## Core features
 
-Prepare three files for your exam:
-- `metadata.json` — Exam information and topic weights (use the sample as template)
-- `{EXAM-CODE}-ALL-FLASHCARDS.md` — Your flashcard bank (one Q/A per paragraph)
-- `{EXAM-CODE}-ALL-QUESTIONS.md` — Your practice questions (one question per section with A-D options)
+- Flashcard sessions with fair rotation across the full set
+- Quiz sessions with score + topic breakdown
+- Quiz filters: difficulty + topic
+- Optional per-session shuffle of quiz answer choices
+- Requested count can be any value from `1` to available items
+- All data stored locally in browser IndexedDB
 
-### 2. Open the App
+## Run locally
 
-Visit: **[study-dashboard.github.io](https://study-dashboard.github.io)**
+No build tooling is required.
 
-### 3. Load Your Content
+1. Clone the repo.
+2. Open `index.html` in a browser, or run a static server from repo root:
+   - Python: `python -m http.server 8000`
+   - Node: `npx serve .`
+3. Load an exam pack (one `metadata.json`, one `*-ALL-FLASHCARDS.md`, one `*-ALL-QUESTIONS.md`).
 
-Click **"Load Exam Files"** and select your three files from your device. The app will parse and store everything locally in your browser.
+## Skill included in this repo
 
-### 4. Study
+The generation skill is included at:
 
-Choose **Flashcard Mode** or **Quiz Mode** and start practicing.
+- `skills/generate-study-content/SKILL.md`
+- `skills/generate-study-content/scripts/*`
 
-## Data Privacy
+It produces content in the exact format this app consumes. See the skill's `SKILL.md` for workflow details and deterministic helper scripts.
 
-- ✅ All content stays on YOUR device
-- ✅ No data sent to servers
-- ✅ No login required
-- ✅ No tracking or analytics
-- ✅ Progress only saved locally in your browser
+## Deploy/publish
 
-**Note:** If you clear your browser storage/cache, progress will be reset.
+### GitHub Pages
 
-## Supported Formats
+1. Push `main`.
+2. In GitHub: **Settings -> Pages**.
+3. Set source to **Deploy from a branch**, branch **main**, folder **/** (root).
+4. Save and wait for Pages to publish.
 
-### Flashcards (Markdown)
+If enabled for this repo/account, the URL is typically:
 
-```markdown
-# Master Flashcard Bank
+- `https://seanbulger_microsoft.github.io/study-dashboard/`
 
-**1. What is a developer environment?**
+Always treat the URL shown in **Settings -> Pages** as canonical.
 
-A single-user environment that cannot be used to run production apps.
+### Other static hosts
 
-**2. What does ALM stand for?**
+This app is static HTML/CSS/JS, so you can publish the same root files to Netlify, Vercel static hosting, Azure Static Web Apps, or any static web server.
 
-Application Lifecycle Management...
-```
+## Development workflow
 
-### Questions (Markdown)
+1. Edit and test in `app-src/`.
+2. Sync `app-src` updates into `app-build/` when preparing a release.
+3. Copy release-ready `app-build` app files (`app.js`, `index.html`, `styles.css`) to repo root before deploy.
 
-```markdown
-### Q0030 - Implement ALM
-*ALM · Medium*
+## Privacy
 
-> Question text goes here as a blockquote
-
-- **A.** Option A text
-- **B.** Option B text  
-- **C.** Option C text
-- **D.** Option D text
-
-**Answer: B**
-
-Explanation of why B is correct.
-
-`['ALM-002']`
-```
-
-### Metadata (JSON)
-
-```json
-{
-  "examCode": "AB-620",
-  "examTitle": "Your Exam Name",
-  "description": "Short description",
-  "totalFlashcards": 500,
-  "totalQuestions": 250,
-  "topics": [
-    {
-      "code": "TOPIC1",
-      "name": "Topic Name",
-      "weight": 0.50
-    }
-  ]
-}
-```
-
-## Fair Random Cycling
-
-The app tracks which items you've seen across sessions. When you request N items:
-1. The app selects from unseen items first (items you haven't reviewed yet)
-2. Once all items are seen, it resets and continues (starting "cycle 2")
-3. This ensures you eventually review ALL content, not just a favorite subset
-
-Seen tracking persists across browser sessions — your device remembers what you've practiced.
-
-## Storage Limits
-
-Browser storage is typically **5-50MB** per site. For most exams this is plenty:
-- 500 flashcards ≈ 1MB
-- 250 questions ≈ 2MB  
-- Progress data ≈ 100KB
-
-## Browser Support
-
-Works on all modern browsers:
-- ✅ Chrome, Edge, Firefox, Safari (desktop)
-- ✅ Safari (iOS/iPhone)
-- ✅ Chrome (Android)
-
-Requires JavaScript enabled.
-
-## Troubleshooting
-
-**Q: Files don't load**
-- Check that metadata.json is included
-- Verify file names match the pattern (must include "FLASHCARDS" and "QUESTIONS")
-
-**Q: Progress disappeared after I cleared cache**
-- Browser storage was deleted. Load your files again.
-- Tip: Don't clear "Cookies and site data" for this site
-
-**Q: Quiz scores seem wrong**
-- Check that your questions use exactly A-B-C-D options
-- Check that **Answer: X** is formatted correctly
-
-## Development
-
-This is a vanilla JavaScript app with no dependencies. To modify:
-
-1. Edit `app.js` (logic), `styles.css` (design), `index.html` (structure)
-2. Test locally by opening `index.html` in a browser
-3. Deploy to GitHub Pages (see deployment instructions)
-
-## License
-
-Personal use only. Do not redistribute exam content.
+- Content and study history stay in local browser storage for that device/browser profile.
+- Clearing site data resets stored progress.
