@@ -671,16 +671,19 @@ function parseQuestionsMarkdown(content) {
 }
 
 
+// Normalizes CRLF/CR to LF so line-anchored regexes ($ / ^) match reliably regardless of
+// the source file's line-ending style (Windows-authored .md files use CRLF).
+function normalizeLineEndings(text) {
+    return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
 async function loadFilesFromInput(files) {
     let metadata = null;
     let flashcardsContent = '';
     let questionsContent = '';
-    
+
     for (const file of files) {
-        const rawContent = await file.text();
-        // Normalize CRLF/CR to LF so line-anchored regexes ($ / ^) match reliably
-        // regardless of the source file's line-ending style (Windows-authored .md files use CRLF).
-        const content = rawContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const content = normalizeLineEndings(await file.text());
         if (file.name === 'metadata.json') {
             metadata = JSON.parse(content);
         } else if (file.name.includes('FLASHCARDS')) {
@@ -689,7 +692,40 @@ async function loadFilesFromInput(files) {
             questionsContent = content;
         }
     }
-    
+
+    return loadParsedContentPack({ metadata, flashcardsContent, questionsContent });
+}
+
+// Fetches a content pack (metadata.json + flashcards/questions markdown) from a relative
+// URL instead of a file picker - used to auto-load an example pack for people browsing
+// the app before they've decided to load their own content (e.g. on a VibeHub preview).
+async function loadContentPackFromUrl(folderPath) {
+    const base = folderPath.split('/').map(encodeURIComponent).join('/');
+
+    const metadataResponse = await fetch(`${base}/metadata.json`);
+    if (!metadataResponse.ok) {
+        throw new Error(`Could not fetch ${folderPath}/metadata.json (${metadataResponse.status})`);
+    }
+    const metadata = await metadataResponse.json();
+
+    const flashcardsFile = metadata.contentPack?.flashcardsFile || 'ALL-FLASHCARDS.md';
+    const questionsFile = metadata.contentPack?.questionsFile || 'ALL-QUESTIONS.md';
+
+    const [flashcardsResponse, questionsResponse] = await Promise.all([
+        fetch(`${base}/${encodeURIComponent(flashcardsFile)}`),
+        fetch(`${base}/${encodeURIComponent(questionsFile)}`)
+    ]);
+    if (!flashcardsResponse.ok || !questionsResponse.ok) {
+        throw new Error(`Could not fetch content pack files from ${folderPath}`);
+    }
+
+    const flashcardsContent = normalizeLineEndings(await flashcardsResponse.text());
+    const questionsContent = normalizeLineEndings(await questionsResponse.text());
+
+    return loadParsedContentPack({ metadata, flashcardsContent, questionsContent });
+}
+
+async function loadParsedContentPack({ metadata, flashcardsContent, questionsContent }) {
     if (!metadata) {
         throw new Error('metadata.json is required');
     }
@@ -1034,24 +1070,29 @@ document.getElementById('loadFileBtn').addEventListener('click', () => {
     document.getElementById('fileInput').click();
 });
 
+// Shared by manual file-picker loads and the default-content auto-load, so both paths
+// end up in the same state (topic filter populated, counts shown, mode buttons visible).
+async function showLoadedContent(exam, flashcardCount, questionCount, { isDefault = false } = {}) {
+    await populateQuizTopicFilter();
+    await updateFlashcardCountHint();
+    await updateQuizCountHint();
+
+    const info = document.getElementById('contentInfo');
+    info.innerHTML = `
+        ${isDefault ? '<div class="default-content-note">📚 Showing example content - load your own files to replace it.</div>' : ''}
+        <strong>${exam.title}</strong><br>
+        Flashcards: ${flashcardCount}<br>
+        Questions: ${questionCount}
+    `;
+
+    document.getElementById('fileStatus').style.display = 'block';
+    document.getElementById('modeButtons').style.display = 'flex';
+}
+
 document.getElementById('fileInput').addEventListener('change', async (e) => {
     try {
         const { exam, flashcardCount, questionCount } = await loadFilesFromInput(e.target.files);
-        await populateQuizTopicFilter();
-        await updateFlashcardCountHint();
-        await updateQuizCountHint();
-        
-        // Show status (actual parsed counts, not the static metadata.json numbers)
-        const info = document.getElementById('contentInfo');
-        info.innerHTML = `
-            <strong>${exam.title}</strong><br>
-            Flashcards: ${flashcardCount}<br>
-            Questions: ${questionCount}
-        `;
-        
-        document.getElementById('fileStatus').style.display = 'block';
-        document.getElementById('modeButtons').style.display = 'flex';
-        
+        await showLoadedContent(exam, flashcardCount, questionCount);
         e.target.value = ''; // Reset input
     } catch (err) {
         alert('Error loading files: ' + err.message);
@@ -1510,8 +1551,36 @@ document.getElementById('endQuizBtn').addEventListener('click', () => {
 // INITIALIZATION
 // ============================================================================
 
+// Example content pack auto-loaded for first-time visitors (e.g. browsing on VibeHub)
+// so they can explore the app before deciding to load their own files. Only kicks in
+// when no exam has been loaded yet - never overwrites a returning user's own content.
+const DEFAULT_CONTENT_PACK_PATH = 'Flash Cards/AB-620 Learn Docs';
+
+async function hasAnyExam() {
+    const exams = await new Promise((resolve, reject) => {
+        const request = db.transaction([STORE_NAMES.exams]).objectStore(STORE_NAMES.exams).getAll();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+    });
+    return exams.length > 0;
+}
+
+async function autoLoadDefaultContentIfEmpty() {
+    if (await hasAnyExam()) return;
+
+    try {
+        const { exam, flashcardCount, questionCount } = await loadContentPackFromUrl(DEFAULT_CONTENT_PACK_PATH);
+        await showLoadedContent(exam, flashcardCount, questionCount, { isDefault: true });
+    } catch (err) {
+        // Not every deployment ships the example pack (e.g. a bare fork with no Flash
+        // Cards folder) - fall back to the normal empty "Load Exam Files" prompt.
+        console.warn('No default content pack loaded:', err.message);
+    }
+}
+
 async function init() {
     await initDB();
+    await autoLoadDefaultContentIfEmpty();
     console.log('✓ Study Dashboard ready');
 }
 

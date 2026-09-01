@@ -133,6 +133,16 @@ h3 {
     margin: 20px 0;
 }
 
+.default-content-note {
+    background: #fff7e0;
+    border: 1px solid #f0d98c;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 0.9em;
+    color: #6b5a12;
+}
+
 .status-panel h3 {
     margin-bottom: 10px;
 }
