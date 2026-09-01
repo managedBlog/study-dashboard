@@ -852,6 +852,134 @@ function shuffleArray(arr) {
     return shuffled;
 }
 
+// ============================================================================
+// MULTI-SELECT DROPDOWN WIDGET (checkbox panel, used by Difficulty/Topic filters)
+// ============================================================================
+
+const ALL_VALUE = '__all__';
+
+// Renders the "All" checkbox plus one checkbox per value into a .multiselect container's
+// panel, wires up open/close + selection behavior, and sets the initial "All" state/label.
+function renderMultiSelectOptions(containerId, values) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const panel = container.querySelector('.multiselect-panel');
+    if (!panel) return;
+
+    panel.innerHTML = '';
+    const allLabel = container.dataset.allLabel || 'All';
+
+    const allOption = document.createElement('label');
+    allOption.className = 'multiselect-option multiselect-all';
+    allOption.innerHTML = `<input type="checkbox" value="${ALL_VALUE}" checked> <span>${escapeHtml(allLabel)}</span>`;
+    panel.appendChild(allOption);
+
+    if (values.length > 0) {
+        const divider = document.createElement('div');
+        divider.className = 'multiselect-divider';
+        panel.appendChild(divider);
+    }
+
+    values.forEach((value) => {
+        const option = document.createElement('label');
+        option.className = 'multiselect-option';
+        option.innerHTML = `<input type="checkbox" value="${escapeAttribute(value)}"> <span>${escapeHtml(value)}</span>`;
+        panel.appendChild(option);
+    });
+
+    setMultiSelectDisabledState(containerId, true);
+    updateMultiSelectLabel(containerId);
+}
+
+// While "All" is checked, individual checkboxes are disabled (checking one only makes sense
+// after opting out of "All" first) - keeps the two states from fighting each other.
+function setMultiSelectDisabledState(containerId, allChecked) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll(`.multiselect-panel input[type="checkbox"]:not([value="${ALL_VALUE}"])`)
+        .forEach((cb) => { cb.disabled = allChecked; });
+}
+
+// Returns the specific selected values, or [] when "All" is in effect (no filter applied).
+// Also treats "All unchecked but nothing else picked" as "All" - least-surprising default.
+function getMultiSelectValues(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return [];
+    const allCheckbox = container.querySelector(`.multiselect-panel input[value="${ALL_VALUE}"]`);
+    if (!allCheckbox || allCheckbox.checked) return [];
+
+    const selected = Array.from(container.querySelectorAll('.multiselect-panel input[type="checkbox"]:checked'))
+        .map((cb) => cb.value)
+        .filter((v) => v !== ALL_VALUE);
+
+    return selected;
+}
+
+function updateMultiSelectLabel(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const toggle = container.querySelector('.multiselect-toggle');
+    if (!toggle) return;
+
+    const allLabel = container.dataset.allLabel || 'All';
+    const selected = getMultiSelectValues(containerId);
+
+    if (selected.length === 0) {
+        toggle.textContent = allLabel;
+    } else if (selected.length === 1) {
+        toggle.textContent = selected[0];
+    } else {
+        toggle.textContent = `${selected.length} selected`;
+    }
+}
+
+function closeAllMultiSelectPanels() {
+    document.querySelectorAll('.multiselect-panel').forEach((panel) => { panel.hidden = true; });
+    document.querySelectorAll('.multiselect-toggle').forEach((toggle) => toggle.setAttribute('aria-expanded', 'false'));
+}
+
+// One-time wiring per widget: toggle open/close, and delegate checkbox changes so this
+// works no matter how many times the panel's contents get re-rendered (e.g. new exam loaded).
+function initMultiSelectDropdown(containerId, onChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const toggle = container.querySelector('.multiselect-toggle');
+    const panel = container.querySelector('.multiselect-panel');
+    if (!toggle || !panel) return;
+
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !panel.hidden;
+        closeAllMultiSelectPanels();
+        if (!isOpen) {
+            panel.hidden = false;
+            toggle.setAttribute('aria-expanded', 'true');
+        }
+    });
+
+    panel.addEventListener('click', (e) => e.stopPropagation());
+
+    panel.addEventListener('change', (e) => {
+        const target = e.target;
+        if (target?.type !== 'checkbox') return;
+
+        if (target.value === ALL_VALUE) {
+            if (target.checked) {
+                panel.querySelectorAll('input[type="checkbox"]:not([value="__all__"])').forEach((cb) => { cb.checked = false; });
+            }
+            setMultiSelectDisabledState(containerId, target.checked);
+        } else if (target.checked) {
+            const allCheckbox = panel.querySelector(`input[value="${ALL_VALUE}"]`);
+            if (allCheckbox) allCheckbox.checked = false;
+        }
+
+        updateMultiSelectLabel(containerId);
+        onChange?.();
+    });
+}
+
+document.addEventListener('click', closeAllMultiSelectPanels);
+
 // Some generated content tags a topic as "(inferred)" when the model derived it rather than
 // reading it directly from the source metadata. That's just a provenance note from generation -
 // end users don't care, and it would otherwise show up as a separate, duplicate topic bucket.
@@ -867,20 +995,11 @@ function getPrimaryTopic(question) {
     return 'General';
 }
 
-// Reads the selected values of a <select multiple>. An empty array means "no filter" (all).
-function getSelectedValues(selectId) {
-    const el = document.getElementById(selectId);
-    if (!el) return [];
-    return Array.from(el.selectedOptions).map((o) => o.value);
-}
-
 async function populateQuizTopicFilter() {
-    const topicSelect = document.getElementById('quizTopicFilter');
-    if (!topicSelect) return;
-
-    topicSelect.innerHTML = '';
-
-    if (!currentExam?.id) return;
+    if (!currentExam?.id) {
+        renderMultiSelectOptions('quizTopicFilter', []);
+        return;
+    }
 
     const allQuestions = await new Promise((resolve, reject) => {
         const tx = db.transaction([STORE_NAMES.questions]);
@@ -895,17 +1014,21 @@ async function populateQuizTopicFilter() {
         .filter(Boolean))]
         .sort((a, b) => a.localeCompare(b));
 
-    topics.forEach((topic) => {
-        const option = document.createElement('option');
-        option.value = topic;
-        option.textContent = topic;
-        topicSelect.appendChild(option);
-    });
+    renderMultiSelectOptions('quizTopicFilter', topics);
 }
 
 // ============================================================================
 // UI HANDLERS
 // ============================================================================
+
+renderMultiSelectOptions('quizDifficultyFilter', ['Easy', 'Medium', 'Hard', 'Unknown']);
+renderMultiSelectOptions('quizTopicFilter', []);
+
+const handleQuizFilterChange = () => {
+    updateQuizCountHint().catch((err) => console.warn('Could not update quiz count hint:', err));
+};
+initMultiSelectDropdown('quizDifficultyFilter', handleQuizFilterChange);
+initMultiSelectDropdown('quizTopicFilter', handleQuizFilterChange);
 
 document.getElementById('loadFileBtn').addEventListener('click', () => {
     document.getElementById('fileInput').click();
@@ -951,14 +1074,6 @@ document.getElementById('quizModeBtn').addEventListener('click', () => {
     });
 });
 
-document.getElementById('quizDifficultyFilter').addEventListener('change', () => {
-    updateQuizCountHint().catch((err) => console.warn('Could not update quiz count hint:', err));
-});
-
-document.getElementById('quizTopicFilter').addEventListener('change', () => {
-    updateQuizCountHint().catch((err) => console.warn('Could not update quiz count hint:', err));
-});
-
 async function getAllFlashcardsForExam() {
     if (!currentExam?.id) return [];
     const allCards = await new Promise((resolve, reject) => {
@@ -998,8 +1113,8 @@ async function updateQuizCountHint() {
     const hint = document.getElementById('quizCountHint');
     if (!input || !hint) return;
 
-    const difficultyFilters = getSelectedValues('quizDifficultyFilter');
-    const topicFilters = getSelectedValues('quizTopicFilter');
+    const difficultyFilters = getMultiSelectValues('quizDifficultyFilter');
+    const topicFilters = getMultiSelectValues('quizTopicFilter');
     const questions = await getAllQuestionsForExam();
     const total = questions.filter((q) => {
         if (difficultyFilters.length > 0 && !difficultyFilters.includes(q.difficulty || 'Unknown')) return false;
@@ -1165,8 +1280,8 @@ document.getElementById('endFlashcardBtn').addEventListener('click', () => {
 
 document.getElementById('startQuizBtn').addEventListener('click', async () => {
     const requestedCount = Math.max(1, parseInt(document.getElementById('quizCount').value, 10) || 30);
-    const difficultyFilters = getSelectedValues('quizDifficultyFilter');
-    const topicFilters = getSelectedValues('quizTopicFilter');
+    const difficultyFilters = getMultiSelectValues('quizDifficultyFilter');
+    const topicFilters = getMultiSelectValues('quizTopicFilter');
     const shuffleOptions = document.getElementById('quizShuffleOptions').checked;
     
     // Get all question IDs
