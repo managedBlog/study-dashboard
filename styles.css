@@ -199,6 +199,17 @@ h3 {
     border-color: #667eea;
 }
 
+.option-field select[multiple] option {
+    padding: 4px 6px;
+}
+
+.filter-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.78em;
+    color: #777;
+}
+
 .checkbox-option {
     display: flex;
     align-items: center;

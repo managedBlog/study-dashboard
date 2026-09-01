@@ -852,11 +852,26 @@ function shuffleArray(arr) {
     return shuffled;
 }
 
+// Some generated content tags a topic as "(inferred)" when the model derived it rather than
+// reading it directly from the source metadata. That's just a provenance note from generation -
+// end users don't care, and it would otherwise show up as a separate, duplicate topic bucket.
+function normalizeTopic(topic) {
+    if (!topic) return topic;
+    return String(topic).replace(/\s*\(inferred\)\s*$/i, '').trim();
+}
+
 function getPrimaryTopic(question) {
     if (Array.isArray(question?.topics) && question.topics.length > 0 && question.topics[0]) {
-        return String(question.topics[0]).trim();
+        return normalizeTopic(String(question.topics[0]).trim());
     }
     return 'General';
+}
+
+// Reads the selected values of a <select multiple>. An empty array means "no filter" (all).
+function getSelectedValues(selectId) {
+    const el = document.getElementById(selectId);
+    if (!el) return [];
+    return Array.from(el.selectedOptions).map((o) => o.value);
 }
 
 async function populateQuizTopicFilter() {
@@ -864,10 +879,6 @@ async function populateQuizTopicFilter() {
     if (!topicSelect) return;
 
     topicSelect.innerHTML = '';
-    const allOption = document.createElement('option');
-    allOption.value = 'all';
-    allOption.textContent = 'All topics';
-    topicSelect.appendChild(allOption);
 
     if (!currentExam?.id) return;
 
@@ -987,12 +998,12 @@ async function updateQuizCountHint() {
     const hint = document.getElementById('quizCountHint');
     if (!input || !hint) return;
 
-    const difficultyFilter = document.getElementById('quizDifficultyFilter').value;
-    const topicFilter = document.getElementById('quizTopicFilter').value;
+    const difficultyFilters = getSelectedValues('quizDifficultyFilter');
+    const topicFilters = getSelectedValues('quizTopicFilter');
     const questions = await getAllQuestionsForExam();
     const total = questions.filter((q) => {
-        if (difficultyFilter !== 'all' && (q.difficulty || 'Unknown') !== difficultyFilter) return false;
-        if (topicFilter !== 'all' && getPrimaryTopic(q) !== topicFilter) return false;
+        if (difficultyFilters.length > 0 && !difficultyFilters.includes(q.difficulty || 'Unknown')) return false;
+        if (topicFilters.length > 0 && !topicFilters.includes(getPrimaryTopic(q))) return false;
         return true;
     }).length;
 
@@ -1154,8 +1165,8 @@ document.getElementById('endFlashcardBtn').addEventListener('click', () => {
 
 document.getElementById('startQuizBtn').addEventListener('click', async () => {
     const requestedCount = Math.max(1, parseInt(document.getElementById('quizCount').value, 10) || 30);
-    const difficultyFilter = document.getElementById('quizDifficultyFilter').value;
-    const topicFilter = document.getElementById('quizTopicFilter').value;
+    const difficultyFilters = getSelectedValues('quizDifficultyFilter');
+    const topicFilters = getSelectedValues('quizTopicFilter');
     const shuffleOptions = document.getElementById('quizShuffleOptions').checked;
     
     // Get all question IDs
@@ -1174,8 +1185,8 @@ document.getElementById('startQuizBtn').addEventListener('click', async () => {
     }
 
     const filteredQuestions = examQuestions.filter((q) => {
-        if (difficultyFilter !== 'all' && (q.difficulty || 'Unknown') !== difficultyFilter) return false;
-        if (topicFilter !== 'all' && getPrimaryTopic(q) !== topicFilter) return false;
+        if (difficultyFilters.length > 0 && !difficultyFilters.includes(q.difficulty || 'Unknown')) return false;
+        if (topicFilters.length > 0 && !topicFilters.includes(getPrimaryTopic(q))) return false;
         return true;
     });
 
@@ -1190,7 +1201,7 @@ document.getElementById('startQuizBtn').addEventListener('click', async () => {
     }
 
     const questionIds = filteredQuestions.map((q) => q.id);
-    const trackerMode = `quiz:${difficultyFilter}:${topicFilter}`;
+    const trackerMode = `quiz:${difficultyFilters.length ? [...difficultyFilters].sort().join('+') : 'all'}:${topicFilters.length ? [...topicFilters].sort().join('+') : 'all'}`;
     const selectedIds = await selectRandomItems(currentExam.id, trackerMode, count, questionIds);
     const questionById = new Map(filteredQuestions.map((q) => [q.id, q]));
     const selectedQuestions = selectedIds.map((id) => questionById.get(id)).filter(Boolean);
@@ -1198,8 +1209,8 @@ document.getElementById('startQuizBtn').addEventListener('click', async () => {
     startQuizSession(selectedQuestions, {
         requestedCount,
         shuffleOptions,
-        difficultyFilter,
-        topicFilter
+        difficultyFilters,
+        topicFilters
     });
 });
 

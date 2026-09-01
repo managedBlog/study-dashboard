@@ -98,19 +98,19 @@
                     <div class="setup-options">
                         <div class="option-field">
                             <label for="quizDifficultyFilter">Difficulty</label>
-                            <select id="quizDifficultyFilter">
-                                <option value="all">All difficulties</option>
+                            <select id="quizDifficultyFilter" multiple size="4">
                                 <option value="Easy">Easy</option>
                                 <option value="Medium">Medium</option>
                                 <option value="Hard">Hard</option>
                                 <option value="Unknown">Unknown</option>
                             </select>
+                            <small class="filter-hint">Nothing selected = all difficulties. Ctrl/Cmd-click to select multiple.</small>
                         </div>
                         <div class="option-field">
                             <label for="quizTopicFilter">Topic</label>
-                            <select id="quizTopicFilter">
-                                <option value="all">All topics</option>
+                            <select id="quizTopicFilter" multiple size="5">
                             </select>
+                            <small class="filter-hint">Nothing selected = all topics. Ctrl/Cmd-click to select multiple.</small>
                         </div>
                         <label class="checkbox-option" for="quizShuffleOptions">
                             <input type="checkbox" id="quizShuffleOptions">
