@@ -1239,7 +1239,13 @@ function startFlashcardSession(cards) {
     
     document.getElementById('flashcardSetup').style.display = 'none';
     document.getElementById('flashcardSession').style.display = 'block';
-    
+
+    // Defensive reset: #flashcardSummary/#flashcardInProgress are toggled
+    // independently by endFlashcardSession(); reset here so a prior session's
+    // leftover summary panel can't leak into a fresh session.
+    document.getElementById('flashcardInProgress').style.display = 'block';
+    document.getElementById('flashcardSummary').style.display = 'none';
+
     showFlashcard();
 }
 
@@ -1304,7 +1310,7 @@ document.getElementById('nextCardBtn').addEventListener('click', () => {
 
 function endFlashcardSession() {
     document.getElementById('cardsReviewed').textContent = currentSession.reviewed;
-    document.getElementById('flashcardSession').style.display = 'none';
+    document.getElementById('flashcardInProgress').style.display = 'none';
     document.getElementById('flashcardSummary').style.display = 'block';
 }
 
@@ -1382,7 +1388,13 @@ function startQuizSession(questions, runtimeOptions = {}) {
     
     document.getElementById('quizSetup').style.display = 'none';
     document.getElementById('quizSession').style.display = 'block';
-    
+
+    // Defensive reset: #quizSummary and #quizInProgress live inside #quizSession
+    // and are toggled independently by endQuizSession(). Without this reset, a
+    // prior session's leftover "Quiz Complete!" panel can leak into a fresh quiz.
+    document.getElementById('quizInProgress').style.display = 'block';
+    document.getElementById('quizSummary').style.display = 'none';
+
     showQuestion();
 }
 
@@ -1510,7 +1522,7 @@ async function endQuizSession() {
         breakdown.appendChild(row);
     });
     
-    document.getElementById('quizSession').style.display = 'none';
+    document.getElementById('quizInProgress').style.display = 'none';
     document.getElementById('quizSummary').style.display = 'block';
 
     // Results must remain visible even if IndexedDB session persistence fails.

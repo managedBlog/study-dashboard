@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
     <title>Study Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=11">
+    <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
     <div id="app">
@@ -54,24 +54,26 @@
                 </div>
                 
                 <div id="flashcardSession" style="display: none;">
-                    <div class="progress-bar">
-                        <span id="flashcardProgress">1 / 20</span>
-                        <div class="bar">
-                            <div id="flashcardProgressFill" class="fill"></div>
+                    <div id="flashcardInProgress">
+                        <div class="progress-bar">
+                            <span id="flashcardProgress">1 / 20</span>
+                            <div class="bar">
+                                <div id="flashcardProgressFill" class="fill"></div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="card" id="flashcardCard">
-                        <div class="card-face" id="cardFace">
-                            <p id="cardText">Question here...</p>
+                        
+                        <div class="card" id="flashcardCard">
+                            <div class="card-face" id="cardFace">
+                                <p id="cardText">Question here...</p>
+                            </div>
                         </div>
+                        <p class="card-hint">Tap the card to flip between question and answer</p>
+                        <div class="controls" id="nextControls">
+                            <button id="prevCardBtn" class="btn btn-secondary">Previous Card</button>
+                            <button id="nextCardBtn" class="btn btn-primary">Next Card</button>
+                        </div>
+                        <div class="flashcard-link-panel" id="flashcardLinks" style="display: none;"></div>
                     </div>
-                    <p class="card-hint">Tap the card to flip between question and answer</p>
-                    <div class="controls" id="nextControls">
-                        <button id="prevCardBtn" class="btn btn-secondary">Previous Card</button>
-                        <button id="nextCardBtn" class="btn btn-primary">Next Card</button>
-                    </div>
-                    <div class="flashcard-link-panel" id="flashcardLinks" style="display: none;"></div>
                     
                     <div class="session-summary" id="flashcardSummary" style="display: none;">
                         <h3>Session Complete!</h3>
@@ -120,28 +122,30 @@
                 </div>
                 
                 <div id="quizSession" style="display: none;">
-                    <div class="progress-bar">
-                        <span id="quizProgress">1 / 30</span>
-                        <div class="bar">
-                            <div id="quizProgressFill" class="fill"></div>
+                    <div id="quizInProgress">
+                        <div class="progress-bar">
+                            <span id="quizProgress">1 / 30</span>
+                            <div class="bar">
+                                <div id="quizProgressFill" class="fill"></div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="question">
-                        <h3 id="questionText">Question here...</h3>
-                    </div>
-                    
-                    <div class="options" id="optionsContainer">
-                        <!-- Options A-D rendered here -->
-                    </div>
-                    
-                    <div class="feedback-panel" id="feedbackPanel" style="display: none;">
-                        <p class="feedback-result" id="feedbackResult"></p>
-                        <p class="feedback-explanation" id="feedbackExplanation"></p>
-                    </div>
-                    
-                    <div class="controls">
-                        <button id="submitAnswerBtn" class="btn btn-primary" disabled>Submit Answer</button>
+                        
+                        <div class="question">
+                            <h3 id="questionText">Question here...</h3>
+                        </div>
+                        
+                        <div class="options" id="optionsContainer">
+                            <!-- Options A-D rendered here -->
+                        </div>
+                        
+                        <div class="feedback-panel" id="feedbackPanel" style="display: none;">
+                            <p class="feedback-result" id="feedbackResult"></p>
+                            <p class="feedback-explanation" id="feedbackExplanation"></p>
+                        </div>
+                        
+                        <div class="controls">
+                            <button id="submitAnswerBtn" class="btn btn-primary" disabled>Submit Answer</button>
+                        </div>
                     </div>
                     
                     <div class="quiz-summary" id="quizSummary" style="display: none;">
@@ -161,6 +165,6 @@
     <!-- Hidden file input -->
     <input type="file" id="fileInput" multiple accept=".md,.json" style="display: none;">
 
-    <script src="app.js?v=11"></script>
+    <script src="app.js?v=12"></script>
 </body>
 </html>
