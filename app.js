@@ -1,4 +1,4 @@
-// Study Dashboard App
+// Study Buddy App
 // Vanilla JS, IndexedDB storage, fair random cycling
 
 const DB_NAME = 'StudyDashboard';
@@ -1593,7 +1593,7 @@ async function autoLoadDefaultContentIfEmpty() {
 async function init() {
     await initDB();
     await autoLoadDefaultContentIfEmpty();
-    console.log('✓ Study Dashboard ready');
+    console.log('✓ Study Buddy ready');
 }
 
 init().catch(err => {
